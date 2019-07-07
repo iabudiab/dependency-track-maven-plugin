@@ -16,7 +16,6 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Base64;
 
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -25,7 +24,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
-
 
 @Mojo(name = "upload-scan", defaultPhase = LifecyclePhase.VERIFY)
 public class UploadScanMojo extends AbstractDependencyTrackMojo {
@@ -37,7 +35,7 @@ public class UploadScanMojo extends AbstractDependencyTrackMojo {
 	private String artifactName;
 
 	@Override
-	protected void doWork(HttpClient client, Builder requestBuilder, URI baseUri) throws MojoExecutionException {
+	protected void doWork(HttpClient client, Builder requestBuilder, URI baseUri) throws PluginException {
 		String encodeArtifact = loadAndEncodeArtifactFile();
 
 		ScanSubmitRequest payload = ScanSubmitRequest.builder() //
@@ -52,7 +50,7 @@ public class UploadScanMojo extends AbstractDependencyTrackMojo {
 		try {
 			payloadString = objectMapper.writeValueAsString(payload);
 		} catch (JsonProcessingException e) {
-			throw new MojoExecutionException("Error serializing payload to JSON", e);
+			throw new PluginException("Error serializing payload to JSON", e);
 		}
 
 		URI uri = baseUri.resolve("scan");
@@ -67,7 +65,7 @@ public class UploadScanMojo extends AbstractDependencyTrackMojo {
 			getLog().info("Uploading artifact to: " + uri);
 			response = client.send(request, BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
-			throw new MojoExecutionException("Error uploading scan: ", e);
+			throw new PluginException("Error uploading scan: ", e);
 		}
 
 		int statusCode = response.statusCode();
@@ -92,18 +90,18 @@ public class UploadScanMojo extends AbstractDependencyTrackMojo {
 		}
 	}
 
-	protected String loadAndEncodeArtifactFile() throws MojoExecutionException {
+	protected String loadAndEncodeArtifactFile() throws PluginException {
 		Path path = Paths.get(artifactDirectory.getPath(), artifactName);
 		getLog().info("Loading artifact: " + path);
 
 		if (!path.toFile().exists()) {
-			throw new MojoExecutionException("Could not find artifact: " + path);
+			throw new PluginException("Could not find artifact: " + path);
 		}
 
 		try {
 			return Base64.getEncoder().encodeToString(Files.readAllBytes(path));
 		} catch (IOException e) {
-			throw new MojoExecutionException("Error enoding artifact", e);
+			throw new PluginException("Error enoding artifact", e);
 		}
 	}
 

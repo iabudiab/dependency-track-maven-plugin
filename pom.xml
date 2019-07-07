@@ -88,6 +88,7 @@
 				<configuration>
 					<dependencyTrackUrl>http://localhost:8080</dependencyTrackUrl>
 					<dependencyTrackApiKey>${DTRACK_API_KEY}</dependencyTrackApiKey>
+					<failOnError>false</failOnError>
 				</configuration>
 				<executions>
 					<execution>

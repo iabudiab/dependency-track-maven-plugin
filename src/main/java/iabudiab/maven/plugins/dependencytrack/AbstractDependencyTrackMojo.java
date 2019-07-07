@@ -1,7 +1,6 @@
 package iabudiab.maven.plugins.dependencytrack;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 
@@ -24,28 +23,35 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 	@Parameter(defaultValue = "${project.version}", property = "projectVersion", required = false)
 	protected String projectVersion;
 
+	@Parameter(property = "failOnError", defaultValue = "true", required = true)
+	private boolean failOnError;
+
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		logConfiguration();
 
-		URI baseUri;
 		try {
-			baseUri = new URI(dependencyTrackUrl);
+			URI baseUri = new URI(dependencyTrackUrl);
 			baseUri = baseUri.resolve("/api/v1/");
 			getLog().info("Using API v1 at: " + baseUri);
-		} catch (URISyntaxException e) {
-			throw new MojoExecutionException("Invalid DepenencyTrack URL: " + dependencyTrackUrl, e);
+
+			HttpClient client = HttpClient.newHttpClient();
+			HttpRequest.Builder requestBuilder = HttpRequest.newBuilder() //
+					.header("X-Api-Key", dependencyTrackApiKey);
+
+			doWork(client, requestBuilder, baseUri);
+		} catch (Exception e) {
+			if (failOnError) {
+				throw new MojoExecutionException("Error during plugin execution", e);
+			} else {
+				getLog().warn("failOnError: false => logging exception");
+				getLog().warn("Error during plugin execution", e);
+			}
 		}
-
-		HttpClient client = HttpClient.newHttpClient();
-		HttpRequest.Builder requestBuilder = HttpRequest.newBuilder() //
-				.header("X-Api-Key", dependencyTrackApiKey);
-
-		doWork(client, requestBuilder, baseUri);
 	}
 
 	protected abstract void doWork(HttpClient client, HttpRequest.Builder requestBuilder, URI baseUri)
-			throws MojoExecutionException;
+			throws PluginException;
 
 	private void logConfiguration() {
 		getLog().info("DependencyTrack Maven Plugin");
