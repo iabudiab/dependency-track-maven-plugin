@@ -2,10 +2,8 @@ package iabudiab.maven.plugins.dependencytrack;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Base64;
 
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -29,7 +27,8 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 	@Override
 	protected void doWork(DTrackClient client) throws PluginException {
-		String encodeArtifact = loadAndEncodeArtifactFile();
+		Path path = Paths.get(artifactDirectory.getPath(), artifactName);
+		String encodeArtifact = Utils.loadAndEncodeArtifactFile(path);
 
 		BomSubmitRequest payload = BomSubmitRequest.builder() //
 				.projectName(projectName) //
@@ -52,20 +51,4 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			throw new PluginException("Error uploading scan: ", e);
 		}
 	}
-
-	protected String loadAndEncodeArtifactFile() throws PluginException {
-		Path path = Paths.get(artifactDirectory.getPath(), artifactName);
-		getLog().info("Loading artifact: " + path);
-
-		if (!path.toFile().exists()) {
-			throw new PluginException("Could not find artifact: " + path);
-		}
-
-		try {
-			return Base64.getEncoder().encodeToString(Files.readAllBytes(path));
-		} catch (IOException e) {
-			throw new PluginException("Error enoding artifact", e);
-		}
-	}
-
 }

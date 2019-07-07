@@ -69,7 +69,7 @@ public class DTrackClient {
 				.uri(uri) //
 				.build();
 
-		log.info("Uploading scan artifact to: " + uri);
+		log.info("Uploading bom artifact to: " + uri);
 		HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
 		checkResponseStatus(response);
 
