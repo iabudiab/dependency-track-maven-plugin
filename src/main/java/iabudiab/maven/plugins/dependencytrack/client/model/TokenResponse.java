@@ -2,10 +2,11 @@ package iabudiab.maven.plugins.dependencytrack.client.model;
 
 import java.util.UUID;
 
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 public class TokenResponse {
 
 	private UUID token;
+
 }
