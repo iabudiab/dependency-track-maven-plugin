@@ -19,7 +19,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	@Parameter(defaultValue = "${project.build.directory}", property = "artifactDir", required = true)
 	private File artifactDirectory;
 
-	@Parameter(defaultValue = "bomt.xml", property = "artifactName", required = true)
+	@Parameter(defaultValue = "bom.xml", property = "artifactName", required = true)
 	private String artifactName;
 
 	@Override
