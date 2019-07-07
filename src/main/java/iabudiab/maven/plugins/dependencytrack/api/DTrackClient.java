@@ -12,6 +12,13 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import org.apache.maven.plugin.logging.Log;
 
@@ -20,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import iabudiab.maven.plugins.dependencytrack.PluginException;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
+import iabudiab.maven.plugins.dependencytrack.client.model.TokenProcessedResponse;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
 
 public class DTrackClient {
@@ -84,15 +92,50 @@ public class DTrackClient {
 		return response;
 	}
 
-		TokenResponse tokenResponse = objectMapper.readValue(response.body(), TokenResponse.class);
-		return tokenResponse;
+	public TokenProcessedResponse checkIfTokenIsBeingProcessed(UUID token) throws IOException, InterruptedException {
+		URI uri = baseUri.resolve("bom/token/" + token.toString());
+		HttpRequest request = newRequest() //
+				.GET().uri(uri) //
+				.build();
+
+		HttpResponse<String> httpResponse = client.send(request, BodyHandlers.ofString());
+		checkResponseStatus(httpResponse);
+		TokenProcessedResponse response = objectMapper.readValue(httpResponse.body(), TokenProcessedResponse.class);
+		return response;
+	}
+
+	public CompletableFuture<Boolean> pollTokenProcessing(UUID token, Executor executor)
+			throws IOException, InterruptedException {
+		Supplier<Boolean> checkToken = () -> {
+			try {
+				log.info("Polling token [" +  Instant.now() + "]: " + token);
+				return checkIfTokenIsBeingProcessed(token).isProcessing();
+			} catch (IOException | InterruptedException e) {
+				throw new CompletionException("Error during token polling", e);
+			}
+		};
+
+		CompletableFuture<Boolean> result = CompletableFuture.supplyAsync(checkToken, executor) //
+				.thenCompose(isProcessing -> {
+					if (isProcessing) {
+						try {
+							log.info("Token is still being processed, will retery in 5 seconds");
+							return pollTokenProcessing(token, CompletableFuture.delayedExecutor(5, TimeUnit.SECONDS));
+						} catch (IOException | InterruptedException e) {
+							throw new CompletionException("Error during token polling", e);
+						}
+					}
+					return CompletableFuture.completedFuture(isProcessing);
+				});
+
+		return result;
 	}
 
 	private void checkResponseStatus(HttpResponse<String> response) {
 		int statusCode = response.statusCode();
 		switch (statusCode) {
 		case 200:
-			log.info("Request successful");
+			log.debug("Request successful");
 			break;
 		case 400:
 			log.error("Bad request. Probabaly an error in the plugin itself.");

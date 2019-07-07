@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -36,7 +39,10 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 		try {
 			TokenResponse tokenResponse = client.uploadBom(payload);
-		} catch (IOException | InterruptedException e) {
+			Boolean isProcessingToken = client.pollTokenProcessing(tokenResponse.getToken(), ForkJoinPool.commonPool()) //
+					.completeOnTimeout(false, 60, TimeUnit.SECONDS) //
+					.get();
+		} catch (IOException | InterruptedException | ExecutionException e) {
 			throw new PluginException("Error uploading scan: ", e);
 		}
 	}
