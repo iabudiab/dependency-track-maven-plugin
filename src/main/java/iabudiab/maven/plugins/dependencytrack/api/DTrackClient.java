@@ -76,8 +76,13 @@ public class DTrackClient {
 				.build();
 
 		log.info("Uploading bom artifact to: " + uri);
-		HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
-		checkResponseStatus(response);
+		HttpResponse<String> httpResponse = client.send(request, BodyHandlers.ofString());
+		checkResponseStatus(httpResponse);
+
+		TokenResponse response = objectMapper.readValue(httpResponse.body(), TokenResponse.class);
+		log.info("BOM response token: " + response.getToken());
+		return response;
+	}
 
 		TokenResponse tokenResponse = objectMapper.readValue(response.body(), TokenResponse.class);
 		return tokenResponse;
