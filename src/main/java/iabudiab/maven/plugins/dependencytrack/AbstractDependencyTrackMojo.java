@@ -1,13 +1,11 @@
 package iabudiab.maven.plugins.dependencytrack;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
+
+import iabudiab.maven.plugins.dependencytrack.api.DTrackClient;
 
 public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 
@@ -31,15 +29,8 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 		logConfiguration();
 
 		try {
-			URI baseUri = new URI(dependencyTrackUrl);
-			baseUri = baseUri.resolve("/api/v1/");
-			getLog().info("Using API v1 at: " + baseUri);
-
-			HttpClient client = HttpClient.newHttpClient();
-			HttpRequest.Builder requestBuilder = HttpRequest.newBuilder() //
-					.header("X-Api-Key", dependencyTrackApiKey);
-
-			doWork(client, requestBuilder, baseUri);
+			DTrackClient client = new DTrackClient(dependencyTrackUrl, dependencyTrackApiKey, getLog());
+			doWork(client);
 		} catch (Exception e) {
 			if (failOnError) {
 				throw new MojoExecutionException("Error during plugin execution", e);
@@ -50,8 +41,7 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 		}
 	}
 
-	protected abstract void doWork(HttpClient client, HttpRequest.Builder requestBuilder, URI baseUri)
-			throws PluginException;
+	protected abstract void doWork(DTrackClient client) throws PluginException;
 
 	private void logConfiguration() {
 		getLog().info("DependencyTrack Maven Plugin");

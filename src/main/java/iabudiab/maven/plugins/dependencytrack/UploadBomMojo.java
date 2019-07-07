@@ -2,18 +2,9 @@ package iabudiab.maven.plugins.dependencytrack;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpRequest.BodyPublishers;
-import java.net.http.HttpRequest.Builder;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.Base64;
 
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -23,6 +14,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import iabudiab.maven.plugins.dependencytrack.api.DTrackClient;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
 
@@ -36,7 +28,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	private String artifactName;
 
 	@Override
-	protected void doWork(HttpClient client, Builder requestBuilder, URI baseUri) throws PluginException {
+	protected void doWork(DTrackClient client) throws PluginException {
 		String encodeArtifact = loadAndEncodeArtifactFile();
 
 		BomSubmitRequest payload = BomSubmitRequest.builder() //
@@ -47,49 +39,17 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 				.build();
 
 		ObjectMapper objectMapper = new ObjectMapper();
-		String payloadString;
+		String encodedArtifact;
 		try {
-			payloadString = objectMapper.writeValueAsString(payload);
+			encodedArtifact = objectMapper.writeValueAsString(payload);
 		} catch (JsonProcessingException e) {
 			throw new PluginException("Error serializing payload to JSON", e);
 		}
 
-		URI uri = baseUri.resolve("bom");
-		HttpRequest request = requestBuilder.PUT(BodyPublishers.ofString(payloadString, StandardCharsets.UTF_8)) //
-				.uri(uri) //
-				.header("Content-Type", "application/json") //
-				.timeout(Duration.ofSeconds(60)) //
-				.build();
-
-		HttpResponse<String> response;
-		TokenResponse tokenResponse;
 		try {
-			getLog().info("Uploading artifact to: " + uri);
-			response = client.send(request, BodyHandlers.ofString());
-			tokenResponse = objectMapper.readValue(response.body(), TokenResponse.class);
+			TokenResponse tokenResponse = client.uploadBom(encodedArtifact);
 		} catch (IOException | InterruptedException e) {
 			throw new PluginException("Error uploading scan: ", e);
-		}
-
-		int statusCode = response.statusCode();
-		switch (statusCode) {
-		case 200:
-			getLog().info("Upload successful");
-			break;
-		case 400:
-			getLog().error("Bad request. Probabaly an error in the plugin itself.");
-			break;
-		case 401:
-			getLog().error("Unauthenticated. Check your API Key");
-			break;
-		case 403:
-			getLog().error("Unauthorized. Check the permissions of the provided API Key. "
-					+ "Required are: SCAN_UPLOAD and either PROJECT_CREATION_UPLOAD or PORTFOLIO_MANAGEMENT");
-			break;
-		default:
-			getLog().warn("Received status code: " + statusCode);
-			getLog().warn("Received response message: " + response.body());
-			break;
 		}
 	}
 
