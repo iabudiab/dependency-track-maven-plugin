@@ -9,9 +9,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import iabudiab.maven.plugins.dependencytrack.api.DTrackClient;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
@@ -37,16 +34,8 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 				.autoCreate(true) //
 				.build();
 
-		ObjectMapper objectMapper = new ObjectMapper();
-		String encodedArtifact;
 		try {
-			encodedArtifact = objectMapper.writeValueAsString(payload);
-		} catch (JsonProcessingException e) {
-			throw new PluginException("Error serializing payload to JSON", e);
-		}
-
-		try {
-			TokenResponse tokenResponse = client.uploadBom(encodedArtifact);
+			TokenResponse tokenResponse = client.uploadBom(payload);
 		} catch (IOException | InterruptedException e) {
 			throw new PluginException("Error uploading scan: ", e);
 		}

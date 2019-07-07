@@ -18,6 +18,8 @@ import org.apache.maven.plugin.logging.Log;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import iabudiab.maven.plugins.dependencytrack.PluginException;
+import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
+import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
 
 public class DTrackClient {
@@ -50,10 +52,12 @@ public class DTrackClient {
 				.timeout(Duration.ofSeconds(60));
 	}
 
-	public void uploadScan(String encodedArtifact) throws IOException, InterruptedException {
+	public void uploadScan(ScanSubmitRequest payload) throws IOException, InterruptedException {
 		URI uri = baseUri.resolve("scan");
+		String payloadAsString = objectMapper.writeValueAsString(payload);
+
 		HttpRequest request = newRequest() //
-				.PUT(BodyPublishers.ofString(encodedArtifact, StandardCharsets.UTF_8)) //
+				.PUT(BodyPublishers.ofString(payloadAsString, StandardCharsets.UTF_8)) //
 				.uri(uri) //
 				.build();
 
@@ -62,10 +66,12 @@ public class DTrackClient {
 		checkResponseStatus(response);
 	}
 
-	public TokenResponse uploadBom(String encodedArtifact) throws IOException, InterruptedException {
+	public TokenResponse uploadBom(BomSubmitRequest payload) throws IOException, InterruptedException {
 		URI uri = baseUri.resolve("bom");
+		String payloadAsString = objectMapper.writeValueAsString(payload);
+
 		HttpRequest request = newRequest() //
-				.PUT(BodyPublishers.ofString(encodedArtifact, StandardCharsets.UTF_8)) //
+				.PUT(BodyPublishers.ofString(payloadAsString, StandardCharsets.UTF_8)) //
 				.uri(uri) //
 				.build();
 
