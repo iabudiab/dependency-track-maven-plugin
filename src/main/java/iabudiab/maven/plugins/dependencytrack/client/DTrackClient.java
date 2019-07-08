@@ -1,4 +1,4 @@
-package iabudiab.maven.plugins.dependencytrack.api;
+package iabudiab.maven.plugins.dependencytrack.client;
 
 import java.io.IOException;
 import java.net.URI;

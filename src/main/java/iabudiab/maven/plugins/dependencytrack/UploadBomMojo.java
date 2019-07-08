@@ -12,8 +12,9 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import iabudiab.maven.plugins.dependencytrack.api.DTrackClient;
+import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
+import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
 
 @Mojo(name = "upload-bom", defaultPhase = LifecyclePhase.VERIFY)

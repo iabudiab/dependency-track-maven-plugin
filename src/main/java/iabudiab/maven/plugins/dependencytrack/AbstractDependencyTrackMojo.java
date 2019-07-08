@@ -5,7 +5,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import iabudiab.maven.plugins.dependencytrack.api.DTrackClient;
+import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
 
 public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 
