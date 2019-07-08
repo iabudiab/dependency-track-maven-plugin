@@ -1,5 +1,7 @@
 package iabudiab.maven.plugins.dependencytrack;
 
+import java.util.UUID;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -15,10 +17,13 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 	@Parameter(property = "dependencyTrackApiKey", required = true)
 	private String dependencyTrackApiKey;
 
-	@Parameter(defaultValue = "${project.groupId}.${project.artifactId}", property = "projectName", required = false)
+	@Parameter(property = "projectId", required = false)
+	protected UUID projectId;
+
+	@Parameter(property = "projectName", defaultValue = "${project.groupId}.${project.artifactId}", required = true)
 	protected String projectName;
 
-	@Parameter(defaultValue = "${project.version}", property = "projectVersion", required = false)
+	@Parameter(property = "projectVersion", defaultValue = "${project.version}", required = true)
 	protected String projectVersion;
 
 	@Parameter(property = "failOnError", defaultValue = "true", required = true)

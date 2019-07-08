@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +27,9 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	@Parameter(defaultValue = "bom.xml", property = "artifactName", required = true)
 	private String artifactName;
 
+	@Parameter(defaultValue = "60", property = "tokenPollingDuration", required = true)
+	private Integer tokenPollingDuration;
+
 	@Override
 	protected void doWork(DTrackClient client) throws PluginException {
 		Path path = Paths.get(artifactDirectory.getPath(), artifactName);
@@ -38,13 +42,35 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 				.autoCreate(true) //
 				.build();
 
+		TokenResponse tokenResponse;
 		try {
-			TokenResponse tokenResponse = client.uploadBom(payload);
+			tokenResponse = client.uploadBom(payload);
+		} catch (IOException | InterruptedException e) {
+			throw new PluginException("Error uploading scan: ", e);
+		}
+
+		if (projectId == null) {
+			getLog().info("Project ID is not defined.");
+			getLog().info("Project ID is required for Findings analysis.");
+			return;
+		}
+
+		try {
 			Boolean isProcessingToken = client.pollTokenProcessing(tokenResponse.getToken(), ForkJoinPool.commonPool()) //
-					.completeOnTimeout(false, 60, TimeUnit.SECONDS) //
+					.completeOnTimeout(false, tokenPollingDuration, TimeUnit.SECONDS) //
 					.get();
+
+			if (isProcessingToken) {
+				getLog().info("BOM token is still being processed, bailing out.");
+				return;
+			}
+
+			List<Finding> findinds = client.getProjectFindinds(projectId);
+
+			
 		} catch (IOException | InterruptedException | ExecutionException e) {
 			throw new PluginException("Error uploading scan: ", e);
 		}
+
 	}
 }
