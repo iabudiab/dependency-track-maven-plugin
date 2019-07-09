@@ -20,6 +20,10 @@ public class FindingsReport {
 
 	public void print() {
 		log.info("--- Findigns report ---");
+		if (findings.isEmpty()) {
+			log.info("+ Nothing to report!");
+			return;
+		}
 
 		for (Finding finding : findings) {
 			Analysis analysis = finding.getAnalysis();
@@ -38,21 +42,23 @@ public class FindingsReport {
 	}
 
 	private boolean checkAnalysis(Analysis analysis) {
+		boolean shouldIgnore = false;
+
+		if (analysis.isSuppressed()) {
+			suppressed++;
+			shouldIgnore = true;
+		}
+
 		if (analysis.getState() == State.FALSE_POSITIVE) {
 			falsePositives++;
-			return true;
+			shouldIgnore = true;
 		}
 
 		if (analysis.getState() == State.NOT_AFFECTED) {
 			notAffected++;
-			return true;
+			shouldIgnore = true;
 		}
 
-		if (analysis.isSuppressed()) {
-			suppressed++;
-			return true;
-		}
-
-		return false;
+		return shouldIgnore;
 	}
 }
