@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import iabudiab.maven.plugins.dependencytrack.PluginException;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
+import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
 import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenProcessedResponse;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
@@ -143,6 +144,18 @@ public class DTrackClient {
 		HttpResponse<String> httpResponse = client.send(request, BodyHandlers.ofString());
 		checkResponseStatus(httpResponse);
 		List<Finding> response = objectMapper.readValue(httpResponse.body(), new TypeReference<List<Finding>>() {});
+		return response;
+	}
+
+	public ProjectMetrics getProjectMetrics(UUID projectId) throws IOException, InterruptedException {
+		URI uri = baseUri.resolve("metrics/project/" + projectId.toString() + "/current");
+		HttpRequest request = newRequest() //
+				.GET().uri(uri) //
+				.build();
+
+		HttpResponse<String> httpResponse = client.send(request, BodyHandlers.ofString());
+		checkResponseStatus(httpResponse);
+		ProjectMetrics response = objectMapper.readValue(httpResponse.body(), ProjectMetrics.class);
 		return response;
 	}
 
