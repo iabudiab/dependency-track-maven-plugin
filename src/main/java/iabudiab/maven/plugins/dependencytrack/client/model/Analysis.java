@@ -1,5 +1,7 @@
 package iabudiab.maven.plugins.dependencytrack.client.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Data;
 
 @Data
@@ -7,5 +9,6 @@ public class Analysis {
 
 	private State state;
 
-	private boolean isSuppressed;
+	@JsonProperty("isSuppressed")
+	private boolean suppressed;
 }
