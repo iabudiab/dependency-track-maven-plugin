@@ -16,10 +16,10 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.StringUtils;
 
 import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
-import iabudiab.maven.plugins.dependencytrack.client.model.Analysis;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
-import iabudiab.maven.plugins.dependencytrack.client.model.State;
+import iabudiab.maven.plugins.dependencytrack.client.model.FindingsReport;
+import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
 
 @Mojo(name = "upload-bom", defaultPhase = LifecyclePhase.VERIFY)
@@ -70,24 +70,13 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			}
 
 			List<Finding> findings = client.getProjectFindinds(UUID.fromString(projectId));
-			reportFindings(findings);
+			FindingsReport findingsReport = new FindingsReport(findings, getLog());
+			findingsReport.print();
+
+			ProjectMetrics projectMetrics = client.getProjectMetrics(UUID.fromString(projectId));
+
 		} catch (IOException | InterruptedException | ExecutionException e) {
 			throw new PluginException("Error processing project findigns: ", e);
-		}
-
-	}
-
-	private void reportFindings(List<Finding> findings) {
-		getLog().info("Findigns report:");
-		for (Finding finding : findings) {
-			Analysis analysis = finding.getAnalysis();
-			if (analysis.getState() == State.FALSE_POSITIVE || analysis.getState() == State.NOT_AFFECTED
-					|| analysis.isSuppressed()) {
-				continue;
-			}
-
-			getLog().info("-  Component    : " + finding.getComponent().getPurl());
-			getLog().info("   Vulnerability: " + finding.getVulnerability().reportSummary());
 		}
 	}
 }
