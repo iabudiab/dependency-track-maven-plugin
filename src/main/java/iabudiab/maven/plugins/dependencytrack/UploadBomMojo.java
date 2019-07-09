@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
@@ -12,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.codehaus.plexus.util.StringUtils;
 
 import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
@@ -49,9 +51,9 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			throw new PluginException("Error uploading scan: ", e);
 		}
 
-		if (projectId == null) {
 			getLog().info("Project ID is not defined.");
 			getLog().info("Project ID is required for Findings analysis.");
+		if (StringUtils.isEmpty(projectId)) {
 			return;
 		}
 
@@ -65,9 +67,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 				return;
 			}
 
-			List<Finding> findinds = client.getProjectFindinds(projectId);
-
-			
+			List<Finding> findinds = client.getProjectFindinds(UUID.fromString(projectId));
 		} catch (IOException | InterruptedException | ExecutionException e) {
 			throw new PluginException("Error uploading scan: ", e);
 		}

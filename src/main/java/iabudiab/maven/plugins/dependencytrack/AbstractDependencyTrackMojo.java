@@ -18,7 +18,7 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 	private String dependencyTrackApiKey;
 
 	@Parameter(property = "projectId", required = false)
-	protected UUID projectId;
+	protected String projectId;
 
 	@Parameter(property = "projectName", defaultValue = "${project.groupId}.${project.artifactId}", required = true)
 	protected String projectName;
