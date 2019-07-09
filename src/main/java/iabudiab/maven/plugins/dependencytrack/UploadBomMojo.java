@@ -48,12 +48,12 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		try {
 			tokenResponse = client.uploadBom(payload);
 		} catch (IOException | InterruptedException e) {
-			throw new PluginException("Error uploading scan: ", e);
+			throw new PluginException("Error uploading bom: ", e);
 		}
 
-			getLog().info("Project ID is not defined.");
-			getLog().info("Project ID is required for Findings analysis.");
 		if (StringUtils.isEmpty(projectId)) {
+			getLog().info("Skipping Findings Analysis and Security Gate due to missing Project ID.");
+			getLog().info("Set the ProjectID in order to use Findings Analysis and Security Gate features.");
 			return;
 		}
 
@@ -69,7 +69,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 			List<Finding> findinds = client.getProjectFindinds(UUID.fromString(projectId));
 		} catch (IOException | InterruptedException | ExecutionException e) {
-			throw new PluginException("Error uploading scan: ", e);
+			throw new PluginException("Error processing project findigns: ", e);
 		}
 
 	}
