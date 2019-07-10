@@ -22,15 +22,35 @@ import iabudiab.maven.plugins.dependencytrack.client.model.FindingsReport;
 import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
 
-@Mojo(name = "upload-bom", defaultPhase = LifecyclePhase.VERIFY)
+/**
+ * Mojo for uploading a <a href="https://cyclonedx.org">CycloneDX</a> SBOM to
+ * <a href="https://dependencytrack.org">Dependency-Track</a>
+ * 
+ * @author Iskandar Abudiab
+ *
+ */
+@Mojo(name = "upload-bom", defaultPhase = LifecyclePhase.VERIFY, requiresOnline = true)
 public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
+	/**
+	 * CycloneDX SBOM directory.
+	 */
 	@Parameter(defaultValue = "${project.build.directory}", property = "artifactDir", required = true)
 	private File artifactDirectory;
 
+	/**
+	 * CycloneDX SBOM filename.
+	 */
 	@Parameter(defaultValue = "bom.xml", property = "artifactName", required = true)
 	private String artifactName;
 
+	/**
+	 * Polling timeout for the uploaded BOM token.
+	 * 
+	 * Upon uploading a BOM to Dependency-Track a token is returned, which can be
+	 * checked for processing status. Once the token is processed, the findings are
+	 * available and can be fetched for further analysis.
+	 */
 	@Parameter(defaultValue = "60", property = "tokenPollingDuration", required = true)
 	private Integer tokenPollingDuration;
 

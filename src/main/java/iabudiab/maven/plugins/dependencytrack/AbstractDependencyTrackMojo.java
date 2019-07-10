@@ -1,7 +1,5 @@
 package iabudiab.maven.plugins.dependencytrack;
 
-import java.util.UUID;
-
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -9,23 +7,68 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
 
+/**
+ * Base class for all <a href=
+ * "https://github.com/DependencyTrack/dependency-track">Dependency-Track</a>
+ * related Mojos
+ * 
+ * @author Iskandar Abudiab
+ *
+ */
 public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 
+	/**
+	 * The URL of the Dependency-Track Server
+	 */
 	@Parameter(property = "dependencyTrackUrl", required = true)
 	private String dependencyTrackUrl;
 
+	/**
+	 * An API key for Dependency-Track.
+	 * 
+	 * The API key should have sufficient permissions:
+	 * 
+	 * <ul>
+	 * <li><b>BOM_UPLOAD</b>: Allows the uploading of CycloneDX and SPDX BOMs
+	 * <li><b>SCAN_UPLOAD</b>: Allows the uploading of Dependency-Check XML reports
+	 * <li><b>VULNERABILITY_ANALYSIS</b>: Allows access to the findings API for
+	 * trending and results
+	 * <li><b>PROJECT_CREATION_UPLOAD</b>: Allows the dynamic creation of projects
+	 * </ul>
+	 * 
+	 */
 	@Parameter(property = "dependencyTrackApiKey", required = true)
 	private String dependencyTrackApiKey;
 
+	/**
+	 * The project ID in Dependency-Track.
+	 * 
+	 * This is required if using Findings Analysis and Security Gate features.
+	 */
 	@Parameter(property = "projectId", required = false)
 	protected String projectId;
 
+	/**
+	 * The project name in Dependency-Track. This name should be unique in a
+	 * Dependency-Track installation.
+	 * 
+	 * If the project doesn't exist, it will be created automatically. The API key
+	 * should have the <b>PROJECT_CREATION_UPLOAD</b> permission.
+	 * 
+	 * @see #projectId
+	 */
 	@Parameter(property = "projectName", defaultValue = "${project.groupId}.${project.artifactId}", required = true)
 	protected String projectName;
 
+	/**
+	 * The project version in Dependency-Track
+	 */
 	@Parameter(property = "projectVersion", defaultValue = "${project.version}", required = true)
 	protected String projectVersion;
 
+	/**
+	 * Whether errors should fail the build. Default to <code>true</code>
+	 */
 	@Parameter(property = "failOnError", defaultValue = "true", required = true)
 	private boolean failOnError;
 

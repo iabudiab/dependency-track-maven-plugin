@@ -12,12 +12,26 @@ import org.apache.maven.plugins.annotations.Parameter;
 import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
 import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
 
-@Mojo(name = "upload-scan", defaultPhase = LifecyclePhase.VERIFY)
+/**
+ * Mojo for uploading a
+ * <a href="https://github.com/jeremylong/DependencyCheck">Dependency-Check</a>
+ * report XML to <a href="https://github.com/DependencyTrack/dependency-track">Dependency-Track</a>
+ * 
+ * @author Iskandar Abudiab
+ *
+ */
+@Mojo(name = "upload-scan", defaultPhase = LifecyclePhase.VERIFY, requiresOnline = true)
 public class UploadScanMojo extends AbstractDependencyTrackMojo {
 
+	/**
+	 * Dependency-Check XML report directory.
+	 */
 	@Parameter(defaultValue = "${project.build.directory}", property = "artifactDir", required = true)
 	private File artifactDirectory;
 
+	/**
+	 * Dependency-Check XML report filename.
+	 */
 	@Parameter(defaultValue = "dependency-check-report.xml", property = "artifactName", required = true)
 	private String artifactName;
 
