@@ -9,6 +9,19 @@
 	<packaging>maven-plugin</packaging>
 	<name>Dependency Track Maven Plugin</name>
 
+	<licenses>
+		<license>
+			<name>Apache 2.0 License</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<issueManagement>
+		<system>Github</system>
+		<url>https://github.com/iabudiab/dependency-track-maven-plugin/issues</url>
+	</issueManagement>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
