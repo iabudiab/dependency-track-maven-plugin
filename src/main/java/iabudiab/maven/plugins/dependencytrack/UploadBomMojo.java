@@ -54,6 +54,9 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	@Parameter(defaultValue = "60", property = "tokenPollingDuration", required = true)
 	private Integer tokenPollingDuration;
 
+	@Parameter(property = "securityGate", required = false)
+	private SecurityGate securityGate = SecurityGate.strict();
+
 	@Override
 	protected void doWork(DTrackClient client) throws PluginException {
 		Path path = Paths.get(artifactDirectory.getPath(), artifactName);
@@ -92,11 +95,19 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			List<Finding> findings = client.getProjectFindinds(UUID.fromString(projectId));
 			FindingsReport findingsReport = new FindingsReport(findings, getLog());
 			findingsReport.print();
-
-			ProjectMetrics projectMetrics = client.getProjectMetrics(UUID.fromString(projectId));
-
 		} catch (IOException | InterruptedException | ExecutionException e) {
 			throw new PluginException("Error processing project findigns: ", e);
 		}
+
+		ProjectMetrics projectMetrics;
+		try {
+			projectMetrics = client.getProjectMetrics(UUID.fromString(projectId));
+		} catch (IOException | InterruptedException e) {
+			throw new PluginException("Error processing fetching metrics: ", e);
+		}
+
+		getLog().info(projectMetrics.printMetrics());
+		getLog().info(securityGate.printThresholds());
+		securityGate.applyOn(projectMetrics);
 	}
 }
