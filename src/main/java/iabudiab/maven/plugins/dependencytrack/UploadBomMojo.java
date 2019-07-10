@@ -93,8 +93,8 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			}
 
 			List<Finding> findings = client.getProjectFindinds(UUID.fromString(projectId));
-			FindingsReport findingsReport = new FindingsReport(findings, getLog());
-			findingsReport.print();
+			FindingsReport findingsReport = new FindingsReport(findings);
+			getLog().info(findingsReport.printSummary());
 		} catch (IOException | InterruptedException | ExecutionException e) {
 			throw new PluginException("Error processing project findigns: ", e);
 		}
