@@ -60,12 +60,12 @@ This goal polls Dependency-Track for `tokenPollingDuration`, which defaults to `
 <plugin>
     ...
     <configuration>
-        <securityGaye>
+        <securityGate>
             <critical>1</critical>
             <high>2</high>
             <medium>3</medium>
             <low>4</low>
-        </securityGaye>
+        </securityGate>
     </configuration>
     ...
 </plugin>
