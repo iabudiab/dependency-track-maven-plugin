@@ -67,7 +67,7 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 	protected String projectVersion;
 
 	/**
-	 * Whether errors should fail the build. Default to <code>true</code>
+	 * Whether errors should fail the build.
 	 */
 	@Parameter(property = "failOnError", defaultValue = "true", required = true)
 	private boolean failOnError;

@@ -54,6 +54,11 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	@Parameter(defaultValue = "60", property = "tokenPollingDuration", required = true)
 	private Integer tokenPollingDuration;
 
+	/**
+	 * Configurable thresholds for the allowed number of <code>critical</code>,
+	 * <code>high</code>, <code>medium</code> and <code>low</code> findings from
+	 * Dependency-Track, which would fail the build if not met.
+	 */
 	@Parameter(property = "securityGate", required = false)
 	private SecurityGate securityGate = SecurityGate.strict();
 
