@@ -123,7 +123,7 @@ public class DTrackClient {
 				.thenCompose(isProcessing -> {
 					if (isProcessing) {
 						try {
-							log.info("Token is still being processed, will retery in 5 seconds");
+							log.info("Token is still being processed, will retry in 5 seconds");
 							return pollTokenProcessing(token, CompletableFuture.delayedExecutor(5, TimeUnit.SECONDS));
 						} catch (IOException | InterruptedException e) {
 							throw new CompletionException("Error during token polling", e);
