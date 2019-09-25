@@ -101,7 +101,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			FindingsReport findingsReport = new FindingsReport(findings);
 			getLog().info(findingsReport.printSummary());
 		} catch (IOException | InterruptedException | ExecutionException e) {
-			throw new PluginException("Error processing project findigns: ", e);
+			throw new PluginException("Error processing project findings: ", e);
 		}
 
 		ProjectMetrics projectMetrics;
