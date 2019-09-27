@@ -16,7 +16,7 @@ public class FindingsReport {
 
 	public CharSequence printSummary() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("--- Findigns report ---");
+		builder.append("--- Findings report ---");
 		builder.append("\n");
 		if (findings.isEmpty()) {
 			builder.append("+ Nothing to report!");
