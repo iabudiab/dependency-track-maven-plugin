@@ -83,8 +83,12 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 			if (failOnError) {
 				throw new MojoExecutionException("Error during plugin execution", e);
 			} else {
-				getLog().warn("failOnError: false => logging exception");
-				getLog().warn("Error during plugin execution", e);
+				if (e instanceof SecurityGateRejectionException) {
+					getLog().warn(e.getMessage());
+				} else {
+					getLog().warn("Error during plugin execution", e);
+				}
+				getLog().info("failOnError: false => Not failing the build");
 			}
 		}
 	}
