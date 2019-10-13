@@ -135,6 +135,18 @@ public class DTrackClient {
 		return result;
 	}
 
+	public Project getProject(String name, String version) throws IOException, InterruptedException {
+		URI uri = baseUri.resolve("project/lookup?name=" + name + "&version=" + version);
+		HttpRequest request = newRequest() //
+				.GET().uri(uri) //
+				.build();
+
+		HttpResponse<String> httpResponse = client.send(request, BodyHandlers.ofString());
+		checkResponseStatus(httpResponse);
+		Project response = objectMapper.readValue(httpResponse.body(), Project.class);
+		return response;
+	}
+
 	public List<Finding> getProjectFindinds(UUID projectId) throws IOException, InterruptedException {
 		URI uri = baseUri.resolve("finding/project/" + projectId.toString());
 		HttpRequest request = newRequest() //

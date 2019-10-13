@@ -81,10 +81,11 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			throw new PluginException("Error uploading bom: ", e);
 		}
 
-		if (StringUtils.isEmpty(projectId)) {
-			getLog().info("Skipping Findings Analysis and Security Gate due to missing Project ID.");
-			getLog().info("Set the ProjectID in order to use Findings Analysis and Security Gate features.");
-			return;
+		Project project;
+		try {
+			project = client.getProject(projectName, projectVersion);
+		} catch (IOException | InterruptedException e) {
+			throw new MojoExecutionException("Error loading project: ", e);
 		}
 
 		try {
@@ -97,7 +98,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 				return;
 			}
 
-			List<Finding> findings = client.getProjectFindinds(UUID.fromString(projectId));
+			List<Finding> findings = client.getProjectFindinds(project.getUuid());
 			FindingsReport findingsReport = new FindingsReport(findings);
 			getLog().info(findingsReport.printSummary());
 		} catch (IOException | InterruptedException | ExecutionException e) {
@@ -106,7 +107,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 		ProjectMetrics projectMetrics;
 		try {
-			projectMetrics = client.getProjectMetrics(UUID.fromString(projectId));
+			projectMetrics = client.getProjectMetrics(project.getUuid());
 		} catch (IOException | InterruptedException e) {
 			throw new PluginException("Error processing fetching metrics: ", e);
 		}

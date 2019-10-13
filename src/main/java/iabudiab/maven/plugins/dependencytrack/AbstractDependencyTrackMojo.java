@@ -41,21 +41,11 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 	private String dependencyTrackApiKey;
 
 	/**
-	 * The project ID in Dependency-Track.
-	 * 
-	 * This is required if using Findings Analysis and Security Gate features.
-	 */
-	@Parameter(property = "projectId", required = false)
-	protected String projectId;
-
-	/**
 	 * The project name in Dependency-Track. This name should be unique in a
 	 * Dependency-Track installation.
 	 * 
 	 * If the project doesn't exist, it will be created automatically. The API key
 	 * should have the <b>PROJECT_CREATION_UPLOAD</b> permission.
-	 * 
-	 * @see #projectId
 	 */
 	@Parameter(property = "projectName", defaultValue = "${project.groupId}.${project.artifactId}", required = true)
 	protected String projectName;
