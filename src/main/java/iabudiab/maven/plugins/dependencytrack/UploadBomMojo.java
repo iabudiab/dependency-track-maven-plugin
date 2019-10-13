@@ -5,20 +5,20 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.codehaus.plexus.util.StringUtils;
 
 import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
 import iabudiab.maven.plugins.dependencytrack.client.model.FindingsReport;
+import iabudiab.maven.plugins.dependencytrack.client.model.Project;
 import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
 
@@ -63,7 +63,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	private SecurityGate securityGate = SecurityGate.strict();
 
 	@Override
-	protected void doWork(DTrackClient client) throws PluginException {
+	protected void doWork(DTrackClient client) throws MojoExecutionException, SecurityGateRejectionException {
 		Path path = Paths.get(artifactDirectory.getPath(), artifactName);
 		String encodeArtifact = Utils.loadAndEncodeArtifactFile(path);
 
@@ -78,7 +78,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		try {
 			tokenResponse = client.uploadBom(payload);
 		} catch (IOException | InterruptedException e) {
-			throw new PluginException("Error uploading bom: ", e);
+			throw new MojoExecutionException("Error uploading bom: ", e);
 		}
 
 		Project project;
@@ -94,7 +94,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 					.get();
 
 			if (isProcessingToken) {
-				getLog().info("BOM token is still being processed, bailing out.");
+				getLog().info("Timeout while waiting for BOM token, bailing out.");
 				return;
 			}
 
@@ -102,14 +102,14 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			FindingsReport findingsReport = new FindingsReport(findings);
 			getLog().info(findingsReport.printSummary());
 		} catch (IOException | InterruptedException | ExecutionException e) {
-			throw new PluginException("Error processing project findings: ", e);
+			throw new MojoExecutionException("Error processing project findings: ", e);
 		}
 
 		ProjectMetrics projectMetrics;
 		try {
 			projectMetrics = client.getProjectMetrics(project.getUuid());
 		} catch (IOException | InterruptedException e) {
-			throw new PluginException("Error processing fetching metrics: ", e);
+			throw new MojoExecutionException("Error fetching project metrics: ", e);
 		}
 
 		getLog().info(projectMetrics.printMetrics());

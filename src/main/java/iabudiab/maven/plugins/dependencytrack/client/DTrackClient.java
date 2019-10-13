@@ -26,9 +26,9 @@ import org.apache.maven.plugin.logging.Log;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import iabudiab.maven.plugins.dependencytrack.PluginException;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
+import iabudiab.maven.plugins.dependencytrack.client.model.Project;
 import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
 import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenProcessedResponse;
@@ -42,19 +42,15 @@ public class DTrackClient {
 	private final URI baseUri;
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
-	public DTrackClient(String dependencyTrackUrl, String dependencyTrackApiKey, Log log) {
+	public DTrackClient(String dependencyTrackUrl, String dependencyTrackApiKey, Log log) throws URISyntaxException {
 		this.dependencyTrackApiKey = dependencyTrackApiKey;
 		this.log = log;
 		this.client = HttpClient.newBuilder() //
 				.connectTimeout(Duration.ofSeconds(30)) //
 				.followRedirects(Redirect.NORMAL) //
 				.build();
-		try {
-			this.baseUri = new URI(dependencyTrackUrl).resolve("/api/v1/");
-			log.info("Using API v1 at: " + baseUri);
-		} catch (URISyntaxException e) {
-			throw new PluginException("Invalid DependencyTrack URL", e);
-		}
+		this.baseUri = new URI(dependencyTrackUrl).resolve("/api/v1/");
+		log.info("Using API v1 at: " + baseUri);
 	}
 
 	private Builder newRequest() {
@@ -112,7 +108,7 @@ public class DTrackClient {
 			throws IOException, InterruptedException {
 		Supplier<Boolean> checkToken = () -> {
 			try {
-				log.info("Polling token [" +  Instant.now() + "]: " + token);
+				log.info("Polling token [" + Instant.now() + "]: " + token);
 				return checkIfTokenIsBeingProcessed(token).isProcessing();
 			} catch (IOException | InterruptedException e) {
 				throw new CompletionException("Error during token polling", e);
@@ -155,7 +151,8 @@ public class DTrackClient {
 
 		HttpResponse<String> httpResponse = client.send(request, BodyHandlers.ofString());
 		checkResponseStatus(httpResponse);
-		List<Finding> response = objectMapper.readValue(httpResponse.body(), new TypeReference<List<Finding>>() {});
+		List<Finding> response = objectMapper.readValue(httpResponse.body(), new TypeReference<List<Finding>>() {
+		});
 		return response;
 	}
 

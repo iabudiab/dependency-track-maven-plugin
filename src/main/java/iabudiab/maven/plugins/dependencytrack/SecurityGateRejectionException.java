@@ -1,6 +1,8 @@
 package iabudiab.maven.plugins.dependencytrack;
 
-public class SecurityGateRejectionException extends PluginException {
+import org.apache.maven.plugin.MojoFailureException;
+
+public class SecurityGateRejectionException extends MojoFailureException {
 
 	private static final long serialVersionUID = -3395152761184106135L;
 

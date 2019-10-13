@@ -1,5 +1,7 @@
 package iabudiab.maven.plugins.dependencytrack;
 
+import java.net.URISyntaxException;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -69,17 +71,26 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 		try {
 			DTrackClient client = new DTrackClient(dependencyTrackUrl, dependencyTrackApiKey, getLog());
 			doWork(client);
-		} catch (Exception e) {
-			if (failOnError) {
-				throw new MojoExecutionException("Error during plugin execution", e);
+		} catch (URISyntaxException e) {
+			throw new MojoExecutionException("Error during plugin execution", e);
+		} catch (MojoFailureException e) {
+			handleFailureException(e);
+		}
+	}
+
+	private void handleFailureException(MojoFailureException e) throws MojoFailureException {
+		if (failOnError) {
+			throw e;
+		} else {
+			if (getLog().isDebugEnabled()) {
+				getLog().debug(e);
 			} else {
-				getLog().warn("failOnError: false => logging exception");
-				getLog().warn("Error during plugin execution", e);
+				getLog().warn(e.getMessage());
 			}
 		}
 	}
 
-	protected abstract void doWork(DTrackClient client) throws PluginException;
+	protected abstract void doWork(DTrackClient client) throws MojoExecutionException, MojoFailureException;
 
 	private void logConfiguration() {
 		getLog().info("DependencyTrack Maven Plugin");

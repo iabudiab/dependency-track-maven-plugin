@@ -5,20 +5,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 
+import org.apache.maven.plugin.MojoExecutionException;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class Utils {
 
-	protected String loadAndEncodeArtifactFile(Path path) throws PluginException {
+	protected String loadAndEncodeArtifactFile(Path path) throws MojoExecutionException {
 		if (!path.toFile().exists()) {
-			throw new PluginException("Could not find artifact: " + path);
+			throw new MojoExecutionException("Could not find artifact: " + path);
 		}
 
 		try {
 			return Base64.getEncoder().encodeToString(Files.readAllBytes(path));
 		} catch (IOException e) {
-			throw new PluginException("Error enoding artifact", e);
+			throw new MojoExecutionException("Error enoding artifact", e);
 		}
 	}
 }
