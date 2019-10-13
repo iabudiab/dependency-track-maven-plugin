@@ -7,6 +7,8 @@
 
 This plugin is modelled after the [Dependency-Track Jenkins Plugin](https://github.com/jenkinsci/dependency-track-plugin) in order to be used in non-Jenkins environments.
 
+Minimum supported Dependency Track version: `3.6.0`
+
 
 - [Quick Overview](#quickoverview)
 - [Usage](#usage)
@@ -75,7 +77,6 @@ Configuration:
 
 | Parameter                 | Description                                                | Default Value |
 |---------------------------|------------------------------------------------------------|---------------|
-| `projectId`               | The UUID of the project in Dependency-Track.               |  |
 | `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}` |
 | `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}` |
 | `artifactDirectory`       | The directory of the artifact to upload                    | `${project.build.directory}` |
@@ -111,7 +112,6 @@ Here are all the configuration parameters summerized:
 | `dependencyTrackUrl`      | The URL of the Dependency-Track Server                     |               |
 | `dependencyTrackApiKey`   | An API key for Dependency-Track                            |               |
 | `failOnError`             | Whether errors should fail the build                       | `true`        |
-| `projectId`               | The UUID of the project in Dependency-Track. Required only for security-gate feature |  |
 | `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}` |
 | `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}` |
 | `artifactDirectory`       | The directory of the artifact to upload                    | `${project.build.directory}` |
