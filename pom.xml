@@ -40,7 +40,7 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>11</java.version>
 		<maven.plugin.version>3.6.0</maven.plugin.version>
-		<jackson-version>2.10.0.pr1</jackson-version>
+		<jackson-version>2.10.0</jackson-version>
 		<lombok.version>1.18.8</lombok.version>
 	</properties>
 
