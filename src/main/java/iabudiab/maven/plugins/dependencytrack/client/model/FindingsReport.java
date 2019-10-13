@@ -1,6 +1,7 @@
 package iabudiab.maven.plugins.dependencytrack.client.model;
 
 import java.util.List;
+import java.util.Optional;
 
 public class FindingsReport {
 
@@ -33,7 +34,8 @@ public class FindingsReport {
 			builder.append("\n");
 			builder.append("   Vulnerability: " + finding.getVulnerability().reportSummary());
 			builder.append("\n");
-			builder.append("   Analysis     : " + finding.getAnalysis().getState());
+			builder.append("   Analysis     : "
+					+ Optional.ofNullable(finding.getAnalysis()).map(Analysis::getState).orElse(State.NOT_SET));
 			builder.append("\n");
 		}
 
