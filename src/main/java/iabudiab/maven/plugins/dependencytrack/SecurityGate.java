@@ -19,10 +19,10 @@ public class SecurityGate {
 	}
 
 	public void applyOn(ProjectMetrics projectMetrics) throws SecurityGateRejectionException {
-		if (projectMetrics.getCritical() >= critical || //
-				projectMetrics.getHigh() >= high || //
-				projectMetrics.getMedium() >= medium || //
-				projectMetrics.getLow() >= low) {
+		if (projectMetrics.getCritical() > critical || //
+				projectMetrics.getHigh() > high || //
+				projectMetrics.getMedium() > medium || //
+				projectMetrics.getLow() > low) {
 			throw new SecurityGateRejectionException("Project did not pass the Security Gate");
 		}
 	}
