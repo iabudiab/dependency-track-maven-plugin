@@ -38,10 +38,13 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<java.version>11</java.version>
+		<java.version>8</java.version>
 		<maven.plugin.version>3.6.0</maven.plugin.version>
 		<jackson-version>2.10.0</jackson-version>
 		<lombok.version>1.18.8</lombok.version>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<apache.httpclient.version>4.5.10</apache.httpclient.version>
 	</properties>
 
 	<dependencies>
@@ -90,6 +93,11 @@
 			<version>${lombok.version}</version>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>${apache.httpclient.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -107,9 +115,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.1</version>
 				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
-					<release>${java.version}</release>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -156,6 +163,7 @@
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>3.1.1</version>
 				<configuration>
+					<source>${java.version}</source>
 					<encoding>UTF-8</encoding>
 				</configuration>
 				<executions>

@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
+import java.util.concurrent.TimeoutException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -77,21 +78,20 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		TokenResponse tokenResponse;
 		try {
 			tokenResponse = client.uploadBom(payload);
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException e) {
 			throw new MojoExecutionException("Error uploading bom: ", e);
 		}
 
 		Project project;
 		try {
 			project = client.getProject(projectName, projectVersion);
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException e) {
 			throw new MojoExecutionException("Error loading project: ", e);
 		}
 
 		try {
 			Boolean isProcessingToken = client.pollTokenProcessing(tokenResponse.getToken(), ForkJoinPool.commonPool()) //
-					.completeOnTimeout(false, tokenPollingDuration, TimeUnit.SECONDS) //
-					.get();
+					.get(tokenPollingDuration, TimeUnit.SECONDS);
 
 			if (isProcessingToken) {
 				getLog().info("Timeout while waiting for BOM token, bailing out.");
@@ -101,14 +101,14 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			List<Finding> findings = client.getProjectFindinds(project.getUuid());
 			FindingsReport findingsReport = new FindingsReport(findings);
 			getLog().info(findingsReport.printSummary());
-		} catch (IOException | InterruptedException | ExecutionException e) {
+		} catch (TimeoutException| IOException | InterruptedException | ExecutionException e) {
 			throw new MojoExecutionException("Error processing project findings: ", e);
 		}
 
 		ProjectMetrics projectMetrics;
 		try {
 			projectMetrics = client.getProjectMetrics(project.getUuid());
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException e) {
 			throw new MojoExecutionException("Error fetching project metrics: ", e);
 		}
 

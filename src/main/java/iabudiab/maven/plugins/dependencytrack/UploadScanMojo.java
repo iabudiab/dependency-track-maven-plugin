@@ -50,7 +50,7 @@ public class UploadScanMojo extends AbstractDependencyTrackMojo {
 
 		try {
 			client.uploadScan(payload);
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException e) {
 			throw new MojoExecutionException("Error uploading scan: ", e);
 		}
 	}
