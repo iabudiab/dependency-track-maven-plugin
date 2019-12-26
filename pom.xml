@@ -5,9 +5,11 @@
 
 	<groupId>dev.iabudiab</groupId>
 	<artifactId>dependency-track-maven-plugin</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>maven-plugin</packaging>
 	<name>Dependency Track Maven Plugin</name>
+	<description>Maven plugin for interacting with Dependency Track</description>
+	<url>https://github.com/iabudiab/dependency-track-maven-plugin</url>
 
 	<licenses>
 		<license>
@@ -34,6 +36,17 @@
 		<system>Github</system>
 		<url>https://github.com/iabudiab/dependency-track-maven-plugin/issues</url>
 	</issueManagement>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -177,4 +190,32 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>release</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.6</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 </project>
