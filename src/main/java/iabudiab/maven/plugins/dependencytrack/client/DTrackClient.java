@@ -129,9 +129,8 @@ public class DTrackClient {
 					if (isProcessing) {
 						try {
 							log.info("Token is still being processed, will retry in 5 seconds");
-							Executor delayedExecutor = Executors.newSingleThreadScheduledExecutor();
-							((ScheduledExecutorService) delayedExecutor).schedule(() -> {}, 5, TimeUnit.SECONDS);
-							return pollTokenProcessing(token, delayedExecutor);
+							return pollTokenProcessing(token,
+									CompletableFutureBackports.delayedExecutor(5, TimeUnit.SECONDS));
 						} catch (Exception e) {
 							throw new CompletionException("Error during token polling", e);
 						}

@@ -1,0 +1,42 @@
+package iabudiab.maven.plugins.dependencytrack.client;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.UtilityClass;
+
+/**
+ * Code backported from CompletableFuture JDK9
+ */
+@UtilityClass
+public class CompletableFutureBackports {
+
+	public static Executor delayedExecutor(long delay, TimeUnit unit) {
+		return new DelayedExecutor(delay, unit, ForkJoinPool.commonPool());
+	}
+
+	@RequiredArgsConstructor
+	private static final class DelayedExecutor implements Executor {
+
+		private static final ScheduledThreadPoolExecutor DELAYED = new ScheduledThreadPoolExecutor(1, runnable -> {
+			Thread thread = new Thread();
+			thread.setDaemon(true);
+			return thread;
+		});
+
+		static {
+			DELAYED.setRemoveOnCancelPolicy(true);
+		}
+
+		private final long delay;
+		private final TimeUnit unit;
+		private final Executor executor;
+
+		public void execute(Runnable r) {
+			DELAYED.schedule(() -> executor.execute(r), delay, unit);
+		}
+	}
+}
