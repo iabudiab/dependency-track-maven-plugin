@@ -14,8 +14,12 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class CompletableFutureBackports {
 
+	private static final Executor POOL = ForkJoinPool.commonPool().getParallelism() > 1 //
+			? ForkJoinPool.commonPool() //
+			: runnable -> new Thread(runnable).start();
+
 	public static Executor delayedExecutor(long delay, TimeUnit unit) {
-		return new DelayedExecutor(delay, unit, ForkJoinPool.commonPool());
+		return new DelayedExecutor(delay, unit, POOL);
 	}
 
 	@RequiredArgsConstructor
