@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
-
 import java.util.concurrent.TimeoutException;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -90,7 +90,8 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		}
 
 		try {
-			Boolean isProcessingToken = client.pollTokenProcessing(tokenResponse.getToken(), ForkJoinPool.commonPool()) //
+			boolean isProcessingToken = client
+					.pollTokenProcessing(tokenResponse.getToken(), ForkJoinPool.commonPool()) //
 					.get(tokenPollingDuration, TimeUnit.SECONDS);
 
 			if (isProcessingToken) {
@@ -102,6 +103,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			FindingsReport findingsReport = new FindingsReport(findings);
 			getLog().info(findingsReport.printSummary());
 		} catch (TimeoutException| IOException | InterruptedException | ExecutionException e) {
+			Thread.currentThread().interrupt();
 			throw new MojoExecutionException("Error processing project findings: ", e);
 		}
 
