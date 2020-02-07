@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -86,7 +87,10 @@ public class DTrackClient {
 	public List<Header> apiHeaders() {
 		Header contentType = new BasicHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 		Header apiKey = new BasicHeader(DEPENDENCY_TRACK_API_KEY_HEADER, dependencyTrackApiKey);
-		return List.of(contentType, apiKey);
+		List<Header> headersList = new ArrayList<>();
+		headersList.add(contentType);
+		headersList.add(apiKey);
+		return headersList;
 	}
 
 	public void uploadScan(ScanSubmitRequest payload) throws IOException {
