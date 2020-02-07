@@ -22,7 +22,7 @@ public class CompletableFutureBackports {
 	private static final class DelayedExecutor implements Executor {
 
 		private static final ScheduledThreadPoolExecutor DELAYED = new ScheduledThreadPoolExecutor(1, runnable -> {
-			Thread thread = new Thread();
+			Thread thread = new Thread(runnable);
 			thread.setDaemon(true);
 			return thread;
 		});
