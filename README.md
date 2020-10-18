@@ -53,7 +53,11 @@ Configuration:
 
 - `upload-bom`: Uploads a CycloneDX or SPDX BOM to Dependency-Track. A project is created in Dependency-Track if it doesn't already exist.
 
-Upon uploading a BOM to Dependency-Track a token is returned, which can be checked for processing status. Once the token is processed, the findings are available and can be fetched for further analysis.
+Upon uploading a BOM to Dependency-Track a token is returned, which can be checked for processing status if `pollToken` is `true`.
+
+If `pollToken` is set to `false`, then this goal would upload the BOM, write the token to a file at `tokenFile` and then exit.
+
+Once the token is processed, the findings are available and can be fetched for further analysis.
 
 This goal polls Dependency-Track for `tokenPollingDuration`, which defaults to `60` seconds, then prints a findings report. The findings can be matched against a `security gate` in order to fail the build, which can be configured as follows:
 
@@ -81,8 +85,32 @@ Configuration:
 | `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}` |
 | `artifactDirectory`       | The directory of the artifact to upload                    | `${project.build.directory}` |
 | `artifactName`            | The name of the artifact to upload                         | `bom.xml` |
+| `pollToken`               | Whether to poll the pending token for processing or not    | `true` |
+| `tokenFile`               | The file path into which the token will be written         | `${project.build.directory}/dependency-track/pendingToken` |
 | `tokenPollingDuration`    | Polling timeout for the uploaded BOM token.                | `60` seconds |
 | `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul> |
+
+---
+
+- `check-token`: Polls a token for processing status and applies a `SecurityGate` on the fetched findings.
+
+The token value can be either read from a file via the `tokenFile` or passed directly as `tokenValue` property.
+
+If both are set then `tokenValue` takes precedence over `tokenFile`.
+
+ Configuration:
+ 
+| Parameter                 | Description                                                | Default Value |
+|---------------------------|------------------------------------------------------------|---------------|
+| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}` |
+| `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}` |
+| `tokenFile`               | The file path into which the token will be written         | `${project.build.directory}/dependency-track/pendingToken` |
+| `tokenValue`              | The UUID value of the pending token                        |  |
+| `tokenPollingDuration`    | Polling timeout for the uploaded BOM token.                | `60` seconds |
+| `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul> |
+
+ ---
+
 
 ## Configuration
 

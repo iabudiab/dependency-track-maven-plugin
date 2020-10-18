@@ -2,8 +2,12 @@ package iabudiab.maven.plugins.dependencytrack;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.channels.Channels;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
@@ -46,6 +50,24 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	private String artifactName;
 
 	/**
+	 * Whether to poll the pending token for processing.
+	 *
+	 * Default is <code>true</code>, which would poll the token for <code>tokenPollingDuration</code>
+	 * and apply the <code>SecurityGate</code> afterwards.
+	 *
+	 * If set to <code>false</code> then this goal would upload the BOM, write the token
+	 * to a a file at <code>tokenFile</code> and then exit.
+	 */
+	@Parameter(defaultValue = "true", property = "pollToken", required = true)
+	private boolean pollToken;
+
+	/**
+	 * The token file path into which the token UUID value should be written.
+	 */
+	@Parameter(defaultValue = "${project.build.directory}/dependency-track/pendingToken", property = "tokenFile", required = true)
+	private String tokenFile;
+
+	/**
 	 * Polling timeout for the uploaded BOM token.
 	 * 
 	 * Upon uploading a BOM to Dependency-Track a token is returned, which can be
@@ -80,6 +102,23 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			tokenResponse = client.uploadBom(payload);
 		} catch (IOException e) {
 			throw new MojoExecutionException("Error uploading bom: ", e);
+		}
+
+		try {
+			Path tokenFilePath = Paths.get(tokenFile);
+			Files.createDirectories(tokenFilePath.getParent());
+			byte[] tokenBytes = tokenResponse.getToken().toString().getBytes(StandardCharsets.UTF_8);
+
+			Files.write(tokenFilePath, tokenBytes,
+					StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+			getLog().info("Token has been written to: " + tokenFilePath.toString());
+		} catch (IOException e) {
+			throw new MojoExecutionException("Error writing token: ", e);
+		}
+
+		if (!pollToken) {
+			getLog().info("Token polling is disabled. Nothing more to do.");
+			return;
 		}
 
 		Project project;

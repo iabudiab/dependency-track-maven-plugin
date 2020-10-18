@@ -5,7 +5,7 @@
 
 	<groupId>dev.iabudiab</groupId>
 	<artifactId>dependency-track-maven-plugin</artifactId>
-	<version>1.0.2</version>
+	<version>1.1.0</version>
 	<packaging>maven-plugin</packaging>
 	<name>Dependency Track Maven Plugin</name>
 	<description>Maven plugin for interacting with Dependency Track</description>
