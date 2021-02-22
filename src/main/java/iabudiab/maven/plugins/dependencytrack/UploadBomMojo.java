@@ -2,7 +2,6 @@ package iabudiab.maven.plugins.dependencytrack;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.channels.Channels;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -138,7 +137,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 				return;
 			}
 
-			List<Finding> findings = client.getProjectFindinds(project.getUuid());
+			List<Finding> findings = client.getProjectFindings(project.getUuid());
 			FindingsReport findingsReport = new FindingsReport(findings);
 			getLog().info(findingsReport.printSummary());
 		} catch (TimeoutException| IOException | InterruptedException | ExecutionException e) {

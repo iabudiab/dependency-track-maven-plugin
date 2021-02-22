@@ -150,7 +150,7 @@ public class DTrackClient {
 		return response;
 	}
 
-	public List<Finding> getProjectFindinds(UUID projectId) throws IOException {
+	public List<Finding> getProjectFindings(UUID projectId) throws IOException {
 		URI uri = baseUri.resolve(API_PROJECT_FINDINGS + projectId.toString());
 		log.debug("Invoking uri => " + uri.toString());
 		HttpGet request = httpGet(uri);

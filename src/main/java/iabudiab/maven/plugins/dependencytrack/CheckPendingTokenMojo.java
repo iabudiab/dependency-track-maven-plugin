@@ -7,13 +7,11 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -82,7 +80,7 @@ public class CheckPendingTokenMojo extends AbstractDependencyTrackMojo {
 				return;
 			}
 
-			List<Finding> findings = client.getProjectFindinds(project.getUuid());
+			List<Finding> findings = client.getProjectFindings(project.getUuid());
 			FindingsReport findingsReport = new FindingsReport(findings);
 			getLog().info(findingsReport.printSummary());
 		} catch (TimeoutException| IOException | InterruptedException | ExecutionException e) {
