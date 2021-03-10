@@ -46,7 +46,7 @@ Configuration:
 |---------------------------|------------------------------------------------------------|---------------|
 | `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}` |
 | `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}` |
-| `artifactDirectory`       | The directory of the artifact to upload                    | `${project.build.directory}` |
+| `artifactDir`             | The directory of the artifact to upload                    | `${project.build.directory}` |
 | `artifactName`            | The name of the artifact to upload                         | `dependency-check-report.xml` |
 
 ---
@@ -83,7 +83,7 @@ Configuration:
 |---------------------------|------------------------------------------------------------|---------------|
 | `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}` |
 | `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}` |
-| `artifactDirectory`       | The directory of the artifact to upload                    | `${project.build.directory}` |
+| `artifactDir`             | The directory of the artifact to upload                    | `${project.build.directory}` |
 | `artifactName`            | The name of the artifact to upload                         | `bom.xml` |
 | `pollToken`               | Whether to poll the pending token for processing or not    | `true` |
 | `tokenFile`               | The file path into which the token will be written         | `${project.build.directory}/dependency-track/pendingToken` |
@@ -142,7 +142,7 @@ Here are all the configuration parameters summerized:
 | `failOnError`             | Whether errors should fail the build                       | `true`        |
 | `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}` |
 | `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}` |
-| `artifactDirectory`       | The directory of the artifact to upload                    | `${project.build.directory}` |
+| `artifactDir`             | The directory of the artifact to upload                    | `${project.build.directory}` |
 | `artifactName`            | The name of the artifact to upload                         | <ul><li>`upload-scan` goal: `dependency-check-report.xml`</li><li>`upload-bom` goal: `bom.xml`</li></ul> |
 | `tokenPollingDuration`    | Polling timeout for the uploaded BOM token.                | `60` seconds |
 | `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul> |
