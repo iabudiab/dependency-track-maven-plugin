@@ -28,7 +28,7 @@ To use the plugin add it into the `build` section of your `pom.xml`. The minimal
 <plugin>
     <groupId>dev.iabudiab</groupId>
     <artifactId>dependency-track-maven-plugin</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <configuration>
         <dependencyTrackUrl>https://dependency-track-installation</dependencyTrackUrl>
         <dependencyTrackApiKey>${env.DTRACK_API_KEY}</dependencyTrackApiKey>
@@ -92,6 +92,18 @@ Configuration:
 
 ---
 
+- `download-bom`: Downloads a project's CycloneDX SBoM from Dependency Track.
+
+Configuration:
+
+| Parameter                 | Description                                                | Default Value |
+|---------------------------|------------------------------------------------------------|---------------|
+| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}` |
+| `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}` |
+| `destinationPath`         | The destination directory where the BOM will be downloaded | `${project.build.directory}/${project.build.finalName}_bom.xml` |
+
+---
+
 - `check-token`: Polls a token for processing status and applies a `SecurityGate` on the fetched findings.
 
 The token value can be either read from a file via the `tokenFile` or passed directly as `tokenValue` property.
@@ -109,7 +121,7 @@ If both are set then `tokenValue` takes precedence over `tokenFile`.
 | `tokenPollingDuration`    | Polling timeout for the uploaded BOM token.                | `60` seconds |
 | `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul> |
 
- ---
+---
 
 
 ## Configuration

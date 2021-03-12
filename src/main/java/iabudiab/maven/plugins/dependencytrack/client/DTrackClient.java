@@ -1,8 +1,10 @@
 package iabudiab.maven.plugins.dependencytrack.client;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,6 +43,8 @@ import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
 import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenProcessedResponse;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
+import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.io.InputStreamFacade;
 
 public class DTrackClient {
 
@@ -51,7 +55,9 @@ public class DTrackClient {
 	private static final String API_V1 = "/api/v1/";
 	private static final String API_UPLOAD_SCAN = "scan";
 	private static final String API_UPLOAD_BOM = "bom";
+	private static final String API_DOWNLOAD_BOM = "bom/cyclonedx/project/";
 	private static final String API_TOKEN_PROCESSING = "bom/token/";
+	private static final String API_PROJECT = "project";
 	private static final String API_PROJECT_LOOKUP = "project/lookup";
 	private static final String API_PROJECT_FINDINGS = "finding/project/";
 	private static final String API_PROJECT_METRICS = "metrics/project/";
@@ -73,15 +79,12 @@ public class DTrackClient {
 				.setSocketTimeout(DEFAULT_TIMEOUT * 1000) //
 				.build();
 
-		CloseableHttpClient httpClient = HttpClients.custom() //
+		this.client = HttpClients.custom() //
 				.setDefaultRequestConfig(config) //
 				.setDefaultHeaders(apiHeaders()) //
 				.setRedirectStrategy(new LaxRedirectStrategy()) //
 				.build();
-
-		this.client = httpClient;
 		log.info("Using API v1 at: " + baseUri);
-
 	}
 
 	public List<Header> apiHeaders() {
@@ -111,11 +114,16 @@ public class DTrackClient {
 		return response;
 	}
 
+	public File downloadBom(UUID projectId, Path destinationPath) throws IOException {
+		URI uri = baseUri.resolve(API_DOWNLOAD_BOM + projectId.toString());
+		HttpGet request = httpGet(uri);
+		return client.execute(request, downloadResponseHandler(destinationPath.toFile()));
+	}
+
 	public TokenProcessedResponse checkIfTokenIsBeingProcessed(UUID token) throws IOException {
 		URI uri = baseUri.resolve(API_TOKEN_PROCESSING + token.toString());
 		HttpGet request = httpGet(uri);
-		TokenProcessedResponse response = client.execute(request, responseBodyHandler(TokenProcessedResponse.class));
-		return response;
+		return client.execute(request, responseBodyHandler(TokenProcessedResponse.class));
 	}
 
 	public CompletableFuture<Boolean> pollTokenProcessing(UUID token, Executor executor) {
@@ -143,11 +151,16 @@ public class DTrackClient {
 				});
 	}
 
+	public Project getProject(String name) throws IOException {
+		URI uri = baseUri.resolve(API_PROJECT + "?name=" + name);
+		HttpGet request = httpGet(uri);
+		return client.execute(request, responseBodyHandler(Project.class));
+	}
+
 	public Project getProject(String name, String version) throws IOException {
 		URI uri = baseUri.resolve(API_PROJECT_LOOKUP + "?name=" + name + "&version=" + version);
 		HttpGet request = httpGet(uri);
-		Project response = client.execute(request, responseBodyHandler(Project.class));
-		return response;
+		return client.execute(request, responseBodyHandler(Project.class));
 	}
 
 	public List<Finding> getProjectFindings(UUID projectId) throws IOException {
@@ -162,8 +175,7 @@ public class DTrackClient {
 		URI uri = baseUri.resolve(API_PROJECT_METRICS + projectId.toString() + "/current");
 		log.debug("Invoking uri => " + uri.toString());
 		HttpGet request = httpGet(uri);
-		ProjectMetrics response = client.execute(request, responseBodyHandler(ProjectMetrics.class));
-		return response;
+		return client.execute(request, responseBodyHandler(ProjectMetrics.class));
 	}
 
 	private <R> ResponseHandler<R> responseBodyHandler(final Class<R> responseType) {
@@ -187,6 +199,14 @@ public class DTrackClient {
 		};
 	}
 
+	private ResponseHandler<File> downloadResponseHandler(File target) {
+		return response -> {
+			InputStreamFacade source = () -> response.getEntity().getContent();
+			FileUtils.copyStreamToFile(source, target);
+			return target;
+		};
+	}
+
 	private void processResponseStatus(HttpResponse response) throws HttpResponseException {
 		StatusLine statusLine = response.getStatusLine();
 		logResponseCode(statusLine.getStatusCode());
@@ -195,7 +215,7 @@ public class DTrackClient {
 		}
 	}
 
-	private String handleNonSuccessCode(HttpResponse response) throws HttpResponseException {
+	private void handleNonSuccessCode(HttpResponse response) throws HttpResponseException {
 		StatusLine statusLine = response.getStatusLine();
 		String detail;
 		try {
@@ -228,14 +248,14 @@ public class DTrackClient {
 		}
 	}
 
-	public HttpPut httpPut(URI uri, String body) {
+	private HttpPut httpPut(URI uri, String body) {
 		HttpPut request = new HttpPut();
 		request.setURI(uri);
 		request.setEntity(EntityBuilder.create().setText(body).build());
 		return request;
 	}
 
-	public HttpGet httpGet(URI uri) {
+	private HttpGet httpGet(URI uri) {
 		HttpGet request = new HttpGet();
 		request.setURI(uri);
 		return request;
