@@ -53,11 +53,11 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>8</java.version>
 		<maven.plugin.version>3.6.0</maven.plugin.version>
-		<jackson-version>2.10.0</jackson-version>
-		<lombok.version>1.18.8</lombok.version>
+		<jackson-version>2.12.2</jackson-version>
+		<lombok.version>1.18.12</lombok.version>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
-		<apache.httpclient.version>4.5.10</apache.httpclient.version>
+		<apache.httpclient.version>4.5.13</apache.httpclient.version>
 	</properties>
 
 	<dependencies>
@@ -188,6 +188,37 @@
 					</execution>
 				</executions>
 			</plugin>
+
+			<plugin>
+				<groupId>org.cyclonedx</groupId>
+				<artifactId>cyclonedx-maven-plugin</artifactId>
+				<version>2.3.0</version>
+				<executions>
+					<execution>
+						<phase>verify</phase>
+						<goals>
+							<goal>makeAggregateBom</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<schemaVersion>1.2</schemaVersion>
+					<includeBomSerialNumber>true</includeBomSerialNumber>
+					<includeCompileScope>true</includeCompileScope>
+					<includeProvidedScope>true</includeProvidedScope>
+					<includeRuntimeScope>true</includeRuntimeScope>
+					<includeSystemScope>true</includeSystemScope>
+					<includeLicenseText>true</includeLicenseText>
+					<includeTestScope>false</includeTestScope>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>dev.iabudiab</groupId>
+				<artifactId>dependency-track-maven-plugin</artifactId>
+				<version>1.1.1</version>
+			</plugin>
+
 		</plugins>
 	</build>
 
