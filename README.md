@@ -28,7 +28,7 @@ To use the plugin add it into the `build` section of your `pom.xml`. The minimal
 <plugin>
     <groupId>dev.iabudiab</groupId>
     <artifactId>dependency-track-maven-plugin</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
     <configuration>
         <dependencyTrackUrl>https://dependency-track-installation</dependencyTrackUrl>
         <dependencyTrackApiKey>${env.DTRACK_API_KEY}</dependencyTrackApiKey>
@@ -110,7 +110,7 @@ The token value can be either read from a file via the `tokenFile` or passed dir
 
 If both are set then `tokenValue` takes precedence over `tokenFile`.
 
- Configuration:
+Configuration:
  
 | Parameter                 | Description                                                | Default Value |
 |---------------------------|------------------------------------------------------------|---------------|
@@ -122,6 +122,16 @@ If both are set then `tokenValue` takes precedence over `tokenFile`.
 | `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul> |
 
 ---
+
+- `check-metrics`: Checks a project's current metrics and applies a `SecurityGate` on any current findings.
+
+Configuration:
+ 
+| Parameter                 | Description                                                | Default Value |
+|---------------------------|------------------------------------------------------------|---------------|
+| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}` |
+| `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}` |
+| `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul> |
 
 
 ## Configuration
