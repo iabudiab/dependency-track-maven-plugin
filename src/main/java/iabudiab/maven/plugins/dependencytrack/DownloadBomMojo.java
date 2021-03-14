@@ -3,6 +3,7 @@ package iabudiab.maven.plugins.dependencytrack;
 import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
 import iabudiab.maven.plugins.dependencytrack.client.model.Project;
 import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
+import org.apache.http.client.HttpResponseException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -30,13 +31,33 @@ public class DownloadBomMojo extends AbstractDependencyTrackMojo {
 	@Parameter(defaultValue = "${project.build.directory}/${project.build.finalName}_bom.xml", property = "destinationPath", required = false)
 	private String destinationPath;
 
+	/**
+	 * Fails the goal if the project is not found.
+	 */
+	@Parameter(defaultValue = "false", property = "failedOnNotFound", required = false)
+	private boolean failedOnNotFound;
+
 	@Override
 	protected void doWork(DTrackClient client) throws MojoExecutionException {
 		Path path = Paths.get(destinationPath);
 		try {
 			Project project = client.getProject(projectName, projectVersion);
 			client.downloadBom(project.getUuid(), path);
+		} catch (HttpResponseException e) {
+			handleProjectNotFound(e);
 		} catch (IOException e) {
+			throw new MojoExecutionException("Error downloading bom: ", e);
+		}
+	}
+
+	private void handleProjectNotFound(HttpResponseException e) throws MojoExecutionException {
+		if (e.getStatusCode() == 404) {
+			if (failedOnNotFound) {
+				throw new MojoExecutionException("Project not found: ", e);
+			} else {
+				getLog().info("failedOnNotFound=false, ignoring project not found: " + projectName + "-" + projectVersion);
+			}
+		} else {
 			throw new MojoExecutionException("Error downloading bom: ", e);
 		}
 	}
