@@ -111,7 +111,7 @@ public class CheckPendingTokenMojo extends AbstractDependencyTrackMojo {
 			token = UUID.fromString(tokenString);
 		}
 
-		if (tokenValue != null && tokenValue != "") {
+		if (tokenValue != null && !tokenValue.equals("")) {
 			getLog().info("Using provided tokenValue: " + tokenValue);
 			token = UUID.fromString(tokenValue);
 		}
