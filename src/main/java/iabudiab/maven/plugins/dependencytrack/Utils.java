@@ -12,7 +12,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class Utils {
 
-	protected String loadAndEncodeArtifactFile(Path path) throws MojoExecutionException {
+	public String loadAndEncodeArtifactFile(Path path) throws MojoExecutionException {
 		if (!path.toFile().exists()) {
 			throw new MojoExecutionException("Could not find artifact: " + path);
 		}
