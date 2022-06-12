@@ -38,20 +38,30 @@ To use the plugin add it into the `build` section of your `pom.xml`. The minimal
 
 ## Goals
 
-- `upload-scan`: Uploads a Dependency-Check XML Report to Dependency-Track. A project is created in Dependency-Track if it doesn't already exist.
+- [upload-scan](#upload-scan)
+- [upload-bom](#upload-bom)
+- [download-bom](#download-bom)
+- [check-token](#check-token)
+- [check-metrics](#check-metrics)
+
+### upload-scan
+
+Uploads a Dependency-Check XML Report to Dependency-Track. A project is created in Dependency-Track if it doesn't already exist.
 
 Configuration:
 
-| Parameter                 | Description                                                | Default Value |
-|---------------------------|------------------------------------------------------------|---------------|
-| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}` |
-| `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}` |
-| `artifactDir`             | The directory of the artifact to upload                    | `${project.build.directory}` |
-| `artifactName`            | The name of the artifact to upload                         | `dependency-check-report.xml` |
+| Parameter                 | Description                                                | Default Value                               |
+|---------------------------|------------------------------------------------------------|---------------------------------------------|
+| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}`  |
+| `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}`                        |
+| `artifactDir`             | The directory of the artifact to upload                    | `${project.build.directory}`                |
+| `artifactName`            | The name of the artifact to upload                         | `dependency-check-report.xml`               |
 
 ---
 
-- `upload-bom`: Uploads a CycloneDX or SPDX BOM to Dependency-Track. A project is created in Dependency-Track if it doesn't already exist.
+### upload-bom
+
+Uploads a CycloneDX or SPDX BOM to Dependency-Track. A project is created in Dependency-Track if it doesn't already exist.
 
 Upon uploading a BOM to Dependency-Track a token is returned, which can be checked for processing status if `pollToken` is `true`.
 
@@ -79,32 +89,36 @@ This goal polls Dependency-Track for `tokenPollingDuration`, which defaults to `
 
 Configuration:
 
-| Parameter                 | Description                                                | Default Value |
-|---------------------------|------------------------------------------------------------|---------------|
-| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}` |
-| `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}` |
-| `artifactDir`             | The directory of the artifact to upload                    | `${project.build.directory}` |
-| `artifactName`            | The name of the artifact to upload                         | `bom.xml` |
-| `pollToken`               | Whether to poll the pending token for processing or not    | `true` |
-| `tokenFile`               | The file path into which the token will be written         | `${project.build.directory}/dependency-track/pendingToken` |
-| `tokenPollingDuration`    | Polling timeout for the uploaded BOM token.                | `60` seconds |
-| `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul> |
+| Parameter                 | Description                                                | Default Value                                                                   |
+|---------------------------|------------------------------------------------------------|---------------------------------------------------------------------------------|
+| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}`                                      |
+| `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}`                                                            |
+| `artifactDir`             | The directory of the artifact to upload                    | `${project.build.directory}`                                                    |
+| `artifactName`            | The name of the artifact to upload                         | `bom.xml`                                                                       |
+| `pollToken`               | Whether to poll the pending token for processing or not    | `true`                                                                          |
+| `tokenFile`               | The file path into which the token will be written         | `${project.build.directory}/dependency-track/pendingToken`                      |
+| `tokenPollingDuration`    | Polling timeout for the uploaded BOM token.                | `60` seconds                                                                    |
+| `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul>   |
 
 ---
 
-- `download-bom`: Downloads a project's CycloneDX SBoM from Dependency Track.
+### download-bom
+
+Downloads a project's CycloneDX SBoM from Dependency Track.
 
 Configuration:
 
-| Parameter                 | Description                                                | Default Value |
-|---------------------------|------------------------------------------------------------|---------------|
-| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}` |
-| `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}` |
-| `destinationPath`         | The destination directory where the BOM will be downloaded | `${project.build.directory}/${project.build.finalName}_bom.xml` |
-
+| Parameter          | Description                                                                   | Default Value                                                   |
+|--------------------|-------------------------------------------------------------------------------|-----------------------------------------------------------------|
+| `projectName`      | The unique name of the porject in Dependency-Track                            | `${project.groupId}.${project.artifactId}`                      |
+| `projectVersion`   | The version of the project in Dependency-Track                                | `${project.version}`                                            |
+| `destinationPath`  | The destination directory where the BOM will be downloaded                    | `${project.build.directory}/${project.build.finalName}_bom.xml` |
+| `outputFormat`     | The format of the BOM to download from Dependency-Track (**XML** or **JSON**) | XML                                                             |
 ---
 
-- `check-token`: Polls a token for processing status and applies a `SecurityGate` on the fetched findings.
+### check-token
+
+Polls a token for processing status and applies a `SecurityGate` on the fetched findings.
 
 The token value can be either read from a file via the `tokenFile` or passed directly as `tokenValue` property.
 
@@ -112,26 +126,69 @@ If both are set then `tokenValue` takes precedence over `tokenFile`.
 
 Configuration:
  
-| Parameter                 | Description                                                | Default Value |
-|---------------------------|------------------------------------------------------------|---------------|
-| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}` |
-| `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}` |
-| `tokenFile`               | The file path into which the token will be written         | `${project.build.directory}/dependency-track/pendingToken` |
-| `tokenValue`              | The UUID value of the pending token                        |  |
-| `tokenPollingDuration`    | Polling timeout for the uploaded BOM token.                | `60` seconds |
-| `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul> |
+| Parameter                 | Description                                                | Default Value                                                                   |
+|---------------------------|------------------------------------------------------------|---------------------------------------------------------------------------------|
+| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}`                                      |
+| `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}`                                                            |
+| `tokenFile`               | The file path into which the token will be written         | `${project.build.directory}/dependency-track/pendingToken`                      |
+| `tokenValue`              | The UUID value of the pending token                        |                                                                                 |
+| `tokenPollingDuration`    | Polling timeout for the uploaded BOM token.                | `60` seconds                                                                    |
+| `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul>   |
 
 ---
 
-- `check-metrics`: Checks a project's current metrics and applies a `SecurityGate` on any current findings.
+### check-metrics
+
+Checks a project's current metrics and applies a `SecurityGate` on any current findings.
 
 Configuration:
  
-| Parameter                 | Description                                                | Default Value |
-|---------------------------|------------------------------------------------------------|---------------|
-| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}` |
-| `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}` |
-| `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul> |
+| Parameter                 | Description                                                | Default Value                                                                   |
+|---------------------------|------------------------------------------------------------|---------------------------------------------------------------------------------|
+| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}`                                      |
+| `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}`                                                            |
+| `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul>   |
+
+---
+
+### diff
+
+Computes a diff between two local BOM files and outputs the results.
+
+The resulting diff indicates for each component whether it is `added`, `removed` or stays `unchanged` if the `first` BOM is applied to the `second`.
+
+This goal mimics the behaviour of the same command in [cyclonedx-cli](https://github.com/CycloneDX/cyclonedx-cli). 
+
+- The **JSON** output format produces the same results as the `cyclonedx-cli`, which can be written to a destination file.
+- The **TEXT** output format produces the same textual output in stdout as  `cyclonedx-cli`.
+
+Configuration:
+
+| Parameter      | Description                                                         | Default Value                           |
+|----------------|---------------------------------------------------------------------|-----------------------------------------|
+| `from`         | The path of the first BOM for comparison                            |                                         |
+| `to`           | The path of the second BOM for comparison                           |                                         |
+| `outputFormat` | The format of the result output. Can be either **JSON** or **TEXT** | JSON                                    |
+| `outputPath`   | The path of the output file                                         | `${project.build.directory}/diff.json`  |
+
+---
+
+### diff-dependency-track
+
+Computes a diff between a local BOM file and its counterpart of the corresponding project in Dependency-Track. This can be used, 
+for example, to check if the local state differs from the last imported BOM in Dependency-Track and act accordingly.
+
+
+If the project doesn't yet exist in Dependency-Track, then the local BOM is compared with a dummy empty BOM, which would result
+in a diff indicating that all the components in the local BOM would be `added` if applied.
+
+Configuration:
+
+| Parameter       | Description                                                         | Default Value                           |
+|-----------------|---------------------------------------------------------------------|-----------------------------------------|
+| `localBomPath`  | The path of the local BOM                                           | `${project.build.directory}/bom.xml`    |
+| `outputFormat`  | The format of the result output. Can be either **JSON** or **TEXT** | JSON                                    |
+| `outputPath`    | The path of the output file                                         | `${project.build.directory}/diff.json`  |
 
 
 ## Configuration
@@ -157,17 +214,17 @@ The API Key should have suffiecien permissions depending on the performed action
 
 Here are all the configuration parameters summerized:
 
-| Parameter                 | Description                                                | Default Value |
-|---------------------------|------------------------------------------------------------|---------------|
-| `dependencyTrackUrl`      | The URL of the Dependency-Track Server                     |               |
-| `dependencyTrackApiKey`   | An API key for Dependency-Track                            |               |
-| `failOnError`             | Whether errors should fail the build                       | `true`        |
-| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}` |
-| `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}` |
-| `artifactDir`             | The directory of the artifact to upload                    | `${project.build.directory}` |
+| Parameter                 | Description                                                | Default Value                                                                                            |
+|---------------------------|------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| `dependencyTrackUrl`      | The URL of the Dependency-Track Server                     |                                                                                                          |
+| `dependencyTrackApiKey`   | An API key for Dependency-Track                            |                                                                                                          |
+| `failOnError`             | Whether errors should fail the build                       | `true`                                                                                                   |
+| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}`                                                               |
+| `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}`                                                                                     |
+| `artifactDir`             | The directory of the artifact to upload                    | `${project.build.directory}`                                                                             |
 | `artifactName`            | The name of the artifact to upload                         | <ul><li>`upload-scan` goal: `dependency-check-report.xml`</li><li>`upload-bom` goal: `bom.xml`</li></ul> |
-| `tokenPollingDuration`    | Polling timeout for the uploaded BOM token.                | `60` seconds |
-| `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul> |
+| `tokenPollingDuration`    | Polling timeout for the uploaded BOM token.                | `60` seconds                                                                                             |
+| `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul>                            |
 
 
 # License
