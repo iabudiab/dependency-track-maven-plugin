@@ -3,6 +3,7 @@ package iabudiab.maven.plugins.dependencytrack;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
 import iabudiab.maven.plugins.dependencytrack.client.model.Project;
@@ -30,7 +31,7 @@ public class DiffWithDependencyTrackBomMojo extends AbstractDependencyTrackMojo 
 	/**
 	 * The local file path for the BOM artifact.
 	 */
-	@Parameter(defaultValue = "bom.xml", property = "localBomPath", required = true)
+	@Parameter(defaultValue = "${project.build.directory}/bom.xml", property = "localBomPath", required = true)
 	private String localBomPath;
 
 	/**
@@ -50,7 +51,7 @@ public class DiffWithDependencyTrackBomMojo extends AbstractDependencyTrackMojo 
 		Bom localBom = BomUtils.readBomAtPath(Paths.get(localBomPath));
 		Bom remoteBom = loadRemoteBom(client);
 
-		computeDiffAndReport(localBom, remoteBom);
+		computeDiffAndReport(remoteBom, localBom);
 	}
 
 	private Bom loadRemoteBom(DTrackClient client) throws MojoExecutionException {
@@ -59,7 +60,9 @@ public class DiffWithDependencyTrackBomMojo extends AbstractDependencyTrackMojo 
 			project = client.getProject(projectName, projectVersion);
 		} catch (HttpResponseException e) {
 			if (e.getStatusCode() == 404) {
-				return new Bom();
+				Bom emptyBom = new Bom();
+				emptyBom.setComponents(new ArrayList<>());
+				return emptyBom;
 			} else {
 				throw new MojoExecutionException("Error loading project: ", e);
 			}
@@ -80,8 +83,8 @@ public class DiffWithDependencyTrackBomMojo extends AbstractDependencyTrackMojo 
 		return BomUtils.readBomAtPath(downloadDestination);
 	}
 
-	private void computeDiffAndReport(Bom local, Bom remote) throws MojoExecutionException {
-		DiffResult diffResult = DiffUtils.compute(local, remote);
+	private void computeDiffAndReport(Bom lhs, Bom rhs) throws MojoExecutionException {
+		DiffResult diffResult = DiffUtils.compute(lhs, rhs);
 		DiffResultsWriter resultsWriter = new DiffResultsWriter(diffResult, outputPath, outputFormat);
 		resultsWriter.write(getLog());
 	}
