@@ -16,6 +16,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import iabudiab.maven.plugins.dependencytrack.BomFormat;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
@@ -114,8 +115,8 @@ public class DTrackClient {
 		return response;
 	}
 
-	public File downloadBom(UUID projectId, Path destinationPath) throws IOException {
-		URI uri = baseUri.resolve(API_DOWNLOAD_BOM + projectId.toString());
+	public File downloadBom(UUID projectId, Path destinationPath, BomFormat format) throws IOException {
+		URI uri = baseUri.resolve(API_DOWNLOAD_BOM + projectId.toString() + "?format=" + format);
 		HttpGet request = httpGet(uri);
 		return client.execute(request, downloadResponseHandler(destinationPath.toFile()));
 	}
