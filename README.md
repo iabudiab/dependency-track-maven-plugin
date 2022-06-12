@@ -43,6 +43,8 @@ To use the plugin add it into the `build` section of your `pom.xml`. The minimal
 - [download-bom](#download-bom)
 - [check-token](#check-token)
 - [check-metrics](#check-metrics)
+- [diff](#diff)
+- [diff-dependency-track](#diff-dependency-track)
 
 ### upload-scan
 
