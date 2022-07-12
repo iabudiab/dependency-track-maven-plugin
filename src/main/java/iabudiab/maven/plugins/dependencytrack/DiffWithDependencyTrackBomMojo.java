@@ -11,6 +11,7 @@ import iabudiab.maven.plugins.dependencytrack.cyclone.BomUtils;
 import iabudiab.maven.plugins.dependencytrack.cyclone.DiffResult;
 import iabudiab.maven.plugins.dependencytrack.cyclone.DiffResultsWriter;
 import iabudiab.maven.plugins.dependencytrack.cyclone.DiffUtils;
+import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 import org.apache.http.client.HttpResponseException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -47,7 +48,7 @@ public class DiffWithDependencyTrackBomMojo extends AbstractDependencyTrackMojo 
 	private String outputPath;
 
 	@Override
-	protected void doWork(DTrackClient client) throws MojoExecutionException, MojoFailureException {
+	protected void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException, MojoFailureException {
 		Bom localBom = BomUtils.readBomAtPath(Paths.get(localBomPath));
 		Bom remoteBom = loadRemoteBom(client);
 

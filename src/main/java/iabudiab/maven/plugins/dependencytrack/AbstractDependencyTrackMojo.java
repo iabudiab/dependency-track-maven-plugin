@@ -1,7 +1,14 @@
 package iabudiab.maven.plugins.dependencytrack;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -64,17 +71,42 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 	@Parameter(property = "failOnError", defaultValue = "true", required = true)
 	private boolean failOnError;
 
+	/**
+	 * Path to a suppressions file containing suppression definitions to be applied before checking the security gate.
+	 */
+	@Parameter(property = "suppressions", defaultValue = "${project.basedir}/suppressions.json", required = false)
+	private String suppressionsFile;
+
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		logConfiguration();
 
 		try {
 			DTrackClient client = new DTrackClient(dependencyTrackUrl, dependencyTrackApiKey, getLog());
-			doWork(client);
+			Suppressions suppressions = loadSuppressions();
+			doWork(client, suppressions);
 		} catch (URISyntaxException e) {
 			throw new MojoExecutionException("Error during plugin execution", e);
 		} catch (MojoFailureException e) {
 			handleFailureException(e);
+		}
+	}
+
+	private Suppressions loadSuppressions() {
+		Path suppressionsPath = Paths.get(suppressionsFile);
+
+		if (!Files.exists(suppressionsPath)) {
+			return Suppressions.none();
+		}
+
+		try {
+			getLog().info("Loading suppressions from: " + suppressionsPath);
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.registerModule(new JavaTimeModule());
+			return objectMapper.readValue(suppressionsPath.toFile(), Suppressions.class);
+		} catch (IOException e) {
+			getLog().warn("Couldn't load suppressions: " + e.getMessage());
+			return Suppressions.none();
 		}
 	}
 
@@ -90,7 +122,7 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 		}
 	}
 
-	protected abstract void doWork(DTrackClient client) throws MojoExecutionException, MojoFailureException;
+	protected abstract void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException, MojoFailureException;
 
 	private void logConfiguration() {
 		getLog().info("DependencyTrack Maven Plugin");

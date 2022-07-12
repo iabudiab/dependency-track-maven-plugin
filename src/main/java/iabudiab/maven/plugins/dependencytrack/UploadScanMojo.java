@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -37,7 +38,7 @@ public class UploadScanMojo extends AbstractDependencyTrackMojo {
 	private String artifactName;
 
 	@Override
-	protected void doWork(DTrackClient client) throws MojoExecutionException {
+	protected void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException {
 		Path path = Paths.get(artifactDirectory.getPath(), artifactName);
 		String encodeArtifact = Utils.loadAndEncodeArtifactFile(path);
 

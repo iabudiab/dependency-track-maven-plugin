@@ -16,9 +16,13 @@ Minimum supported Dependency Track version: `3.6.0`
 
 # Quick Overview
 
-This plugin can upload [Dependency-Check XML Reports](https://jeremylong.github.io/DependencyCheck/), [CycloneDX SBOMs](https://cyclonedx.org/), and [SPDX SBOMs](https://spdx.org/) to Dependency-Track.
+This plugin can interact with Dependency-Track to perform several security-related actions, e.g. upload/download [CycloneDX SBOMs](https://cyclonedx.org/)
+ to/from Dependency-Track, check project metrics, compute diffs etc.
 
 A `Security Gate` can also be configured, in order to fail the build, when a preconfigured number of findings are reported by Dependency-Track.
+
+This plugin also supports custom `suppressions` not configured in Dependency-Track, that filter out specific findings before applying the
+security gate.
 
 # Usage
 
@@ -28,7 +32,7 @@ To use the plugin add it into the `build` section of your `pom.xml`. The minimal
 <plugin>
     <groupId>dev.iabudiab</groupId>
     <artifactId>dependency-track-maven-plugin</artifactId>
-    <version>1.3.0</version>
+    <version>2.1.0</version>
     <configuration>
         <dependencyTrackUrl>https://dependency-track-installation</dependencyTrackUrl>
         <dependencyTrackApiKey>${env.DTRACK_API_KEY}</dependencyTrackApiKey>
@@ -36,9 +40,71 @@ To use the plugin add it into the `build` section of your `pom.xml`. The minimal
 </plugin>
 ```
 
+## Configuration
+
+These parameters are required to configure the plugin:
+
+- `dependencyTrackUrl`: The URL where Dependency-Track is hosted.
+- `dependencyTrackApiKey`: The API Key for Dependency-Track.
+
+The API Key should have sufficient permissions depending on the performed action:
+
+| Permission                | Description                                                |
+|---------------------------|------------------------------------------------------------|
+| `BOM_UPLOAD`              | Allows the uploading of CycloneDX and SPDX BOMs            |
+| `PROJECT_CREATION_UPLOAD` | Allows the dynamic creation of projects                    |
+| `VIEW_VULNERABILITY`      | Allows access to view vulnerabilities                      |
+| `VIEW_PORTFOLIO`          | Allows access to view the components portfolio             |
+
+
+## Suppressions
+
+In order to suppress findings a `JSON` file containing suppression definitions can be configured as follows:
+
+| Parameter     | Description                   | Default Value                          |
+|---------------|-------------------------------|----------------------------------------|
+| `suppression` | Path to the suppressions file | `${project.basedir}/suppressions.json` |
+
+Currently the plugin supports these kinds of suppressions:
+
+- **By PURL**: Suppresses all findings for a given component identified by its `purl`
+
+```json
+{
+  "by": "purl",
+  "purl": "pkg:maven/org.springframework/spring-web@5.3.10?type=jar",
+  "regex": false,
+  "expiration": "2022-12-23",
+  "note": "Some notes explaining why this was suppressed"  
+}
+```
+
+- **By CVE**: Suppresses a finding identified by its Vulnerability ID `CVE`
+
+```json
+{
+  "by": "cve",
+  "cve": "CVE-2021-22096",
+  "expiration": "2022-12-23",
+  "note": "Some notes explaining why this was suppressed"  
+}
+```
+
+- **By CVE of PURL**: Suppresses a finding identified by its Vulnerability ID `CVE` affecting a specific component identified by its `purl`
+
+```json
+{
+  "by": "cve-of-purl",
+  "cve": "CVE-2021-22096",
+  "purl": ".*org.springframework\/spring-web.*",
+  "regex": true,
+  "expiration": "2022-12-23",
+  "note": "Some notes explaining why this was suppressed"  
+}
+```
+
 ## Goals
 
-- [upload-scan](#upload-scan)
 - [upload-bom](#upload-bom)
 - [download-bom](#download-bom)
 - [check-token](#check-token)
@@ -192,41 +258,22 @@ Configuration:
 | `outputFormat`  | The format of the result output. Can be either **JSON** or **TEXT** | JSON                                    |
 | `outputPath`    | The path of the output file                                         | `${project.build.directory}/diff.json`  |
 
-
-## Configuration
-
-These parameters are requried:
-
-- `dependencyTrackUrl`: The URL where Dependency-Track is hosted.
-- `dependencyTrackApiKey`: The API Key for Dependency-Track.
-
-The API Key should have suffiecien permissions depending on the performed action:
-
-| Permission                | Description                                                |
-|---------------------------|------------------------------------------------------------|
-| `BOM_UPLOAD`              | Allows the uploading of CycloneDX and SPDX BOMs            |
-| `SCAN_UPLOAD`             | Allows the uploading of Dependency-Check XML reports       |
-| `VULNERABILITY_ANALYSIS`  | Allows access to the findings API for trending and results |
-| `PROJECT_CREATION_UPLOAD` | Allows the dynamic creation of projects                    |
-
-- `upload-scan`: Required permissions are `SCAN_UPLOAD` & `PROJECT_CREATION_UPLOAD`
-- `upload-bom` : Required permissions are `BOM_UPLOAD` & `VULNERABILITY_ANALYSIS` & `PROJECT_CREATION_UPLOAD`
-
 ### Summary
 
-Here are all the configuration parameters summerized:
+Here are all the configuration parameters summarized:
 
-| Parameter                 | Description                                                | Default Value                                                                                            |
-|---------------------------|------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
-| `dependencyTrackUrl`      | The URL of the Dependency-Track Server                     |                                                                                                          |
-| `dependencyTrackApiKey`   | An API key for Dependency-Track                            |                                                                                                          |
-| `failOnError`             | Whether errors should fail the build                       | `true`                                                                                                   |
-| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}`                                                               |
-| `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}`                                                                                     |
-| `artifactDir`             | The directory of the artifact to upload                    | `${project.build.directory}`                                                                             |
-| `artifactName`            | The name of the artifact to upload                         | <ul><li>`upload-scan` goal: `dependency-check-report.xml`</li><li>`upload-bom` goal: `bom.xml`</li></ul> |
-| `tokenPollingDuration`    | Polling timeout for the uploaded BOM token.                | `60` seconds                                                                                             |
-| `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul>                            |
+| Parameter               | Description                                        | Default Value                                                                                            |
+|-------------------------|----------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| `dependencyTrackUrl`    | The URL of the Dependency-Track Server             |                                                                                                          |
+| `dependencyTrackApiKey` | An API key for Dependency-Track                    |                                                                                                          |
+| `failOnError`           | Whether errors should fail the build               | `true`                                                                                                   |
+| `projectName`           | The unique name of the porject in Dependency-Track | `${project.groupId}.${project.artifactId}`                                                               |
+| `projectVersion`        | The version of the project in Dependency-Track     | `${project.version}`                                                                                     |
+| `artifactDir`           | The directory of the artifact to upload            | `${project.build.directory}`                                                                             |
+| `artifactName`          | The name of the artifact to upload                 | <ul><li>`upload-scan` goal: `dependency-check-report.xml`</li><li>`upload-bom` goal: `bom.xml`</li></ul> |
+| `tokenPollingDuration`  | Polling timeout for the uploaded BOM token.        | `60` seconds                                                                                             |
+| `securityGate`          | The security gate configuration                    | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul>                            |
+| `suppressions`          | Path to the suppressions file                      | `${project.basedir}/suppressions.json`                                                                  |
 
 
 # License

@@ -13,6 +13,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -85,7 +86,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	private SecurityGate securityGate = SecurityGate.strict();
 
 	@Override
-	protected void doWork(DTrackClient client) throws MojoExecutionException, SecurityGateRejectionException {
+	protected void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException, SecurityGateRejectionException {
 		Path path = Paths.get(artifactDirectory.getPath(), artifactName);
 		String encodeArtifact = Utils.loadAndEncodeArtifactFile(path);
 
@@ -136,13 +137,18 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 				getLog().info("Timeout while waiting for BOM token, bailing out.");
 				return;
 			}
-
-			List<Finding> findings = client.getProjectFindings(project.getUuid());
-			FindingsReport findingsReport = new FindingsReport(findings);
-			getLog().info(findingsReport.printSummary());
-		} catch (TimeoutException| IOException | InterruptedException | ExecutionException e) {
+		} catch (TimeoutException| InterruptedException | ExecutionException e) {
 			Thread.currentThread().interrupt();
 			throw new MojoExecutionException("Error processing project findings: ", e);
+		}
+
+		List<Finding> findings;
+		try {
+			findings = client.getProjectFindings(project.getUuid());
+			FindingsReport findingsReport = new FindingsReport(findings);
+			getLog().info(findingsReport.printSummary());
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 
 		ProjectMetrics projectMetrics;
@@ -154,6 +160,9 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 		getLog().info(projectMetrics.printMetrics());
 		getLog().info(securityGate.printThresholds());
-		securityGate.applyOn(projectMetrics);
+		getLog().info(suppressions.printSummary());
+
+		SecurityGate.SecurityReport securityReport = securityGate.applyOn(findings, suppressions);
+		securityReport.execute(getLog());
 	}
 }

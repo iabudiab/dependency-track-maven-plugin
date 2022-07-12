@@ -2,6 +2,7 @@ package iabudiab.maven.plugins.dependencytrack;
 
 import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
 import iabudiab.maven.plugins.dependencytrack.client.model.*;
+import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -62,7 +63,7 @@ public class CheckPendingTokenMojo extends AbstractDependencyTrackMojo {
 	private SecurityGate securityGate = SecurityGate.strict();
 
 	@Override
-	protected void doWork(DTrackClient client) throws MojoExecutionException, SecurityGateRejectionException {
+	protected void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException, SecurityGateRejectionException {
 		Project project;
 		try {
 			project = client.getProject(projectName, projectVersion);
@@ -79,12 +80,17 @@ public class CheckPendingTokenMojo extends AbstractDependencyTrackMojo {
 				getLog().info("Timeout while waiting for BOM token, bailing out.");
 				return;
 			}
-
-			List<Finding> findings = client.getProjectFindings(project.getUuid());
-			FindingsReport findingsReport = new FindingsReport(findings);
-			getLog().info(findingsReport.printSummary());
 		} catch (TimeoutException| IOException | InterruptedException | ExecutionException e) {
 			Thread.currentThread().interrupt();
+			throw new MojoExecutionException("Error processing project findings: ", e);
+		}
+
+		List<Finding> findings;
+		try {
+			findings = client.getProjectFindings(project.getUuid());
+			FindingsReport findingsReport = new FindingsReport(findings);
+			getLog().info(findingsReport.printSummary());
+		} catch (IOException e) {
 			throw new MojoExecutionException("Error processing project findings: ", e);
 		}
 
@@ -97,7 +103,10 @@ public class CheckPendingTokenMojo extends AbstractDependencyTrackMojo {
 
 		getLog().info(projectMetrics.printMetrics());
 		getLog().info(securityGate.printThresholds());
-		securityGate.applyOn(projectMetrics);
+		getLog().info(suppressions.printSummary());
+
+		SecurityGate.SecurityReport securityReport = securityGate.applyOn(findings, suppressions);
+		securityReport.execute(getLog());
 	}
 
 	private UUID loadToken() throws IOException {
@@ -105,7 +114,7 @@ public class CheckPendingTokenMojo extends AbstractDependencyTrackMojo {
 		Path tokenPath = Paths.get(tokenFile);
 
 		if (Files.exists(tokenPath)) {
-			getLog().info("Loading token from: " + tokenPath.toString());
+			getLog().info("Loading token from: " + tokenPath);
 			byte[] bytes = Files.readAllBytes(tokenPath);
 			String tokenString = new String(bytes, StandardCharsets.UTF_8);
 			token = UUID.fromString(tokenString);

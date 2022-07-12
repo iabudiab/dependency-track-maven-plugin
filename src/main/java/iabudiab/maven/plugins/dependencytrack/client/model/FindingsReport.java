@@ -30,20 +30,21 @@ public class FindingsReport {
 				continue;
 			}
 
-			builder.append("-  Component    : " + finding.getComponent().getPurl());
+			builder.append("-- Component    : ").append(finding.getComponent().getPurl());
 			builder.append("\n");
-			builder.append("   Vulnerability: " + finding.getVulnerability().reportSummary());
+			builder.append("   Vulnerability: ").append(finding.getVulnerability().reportSummary());
 			builder.append("\n");
-			builder.append("   Analysis     : "
-					+ Optional.ofNullable(finding.getAnalysis()).map(Analysis::getState).orElse(State.NOT_SET));
+			builder.append("   Analysis     : ").append(Optional.ofNullable(finding.getAnalysis())
+				.map(Analysis::getState)
+				.orElse(State.NOT_SET));
 			builder.append("\n");
 		}
 
-		builder.append("+ False positives : " + falsePositives);
+		builder.append("+ False positives : ").append(falsePositives);
 		builder.append("\n");
-		builder.append("+ Not affected    : " + notAffected);
+		builder.append("+ Not affected    : ").append(notAffected);
 		builder.append("\n");
-		builder.append("+ Suppressed      : " + suppressed);
+		builder.append("+ Suppressed      : ").append(suppressed);
 		builder.append("\n");
 
 		return builder.toString();

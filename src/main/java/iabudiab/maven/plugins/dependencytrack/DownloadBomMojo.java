@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 
 import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
 import iabudiab.maven.plugins.dependencytrack.client.model.Project;
+import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 import org.apache.http.client.HttpResponseException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -42,7 +43,7 @@ public class DownloadBomMojo extends AbstractDependencyTrackMojo {
 	private boolean failedOnNotFound;
 
 	@Override
-	protected void doWork(DTrackClient client) throws MojoExecutionException {
+	protected void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException {
 		validateArguments();
 
 		Path path = Paths.get(destinationPath);

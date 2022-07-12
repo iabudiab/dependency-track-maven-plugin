@@ -1,0 +1,35 @@
+package iabudiab.maven.plugins.dependencytrack.suppressions;
+
+import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
+import lombok.Data;
+
+@Data
+@JsonTypeName("cve")
+public class SuppressCve implements Suppression {
+
+	private String type = "cve";
+
+	private String notes;
+	private LocalDate expiration = LocalDate.MAX;
+	private String cve;
+
+	@Override
+	public boolean shouldSuppress(Finding finding) {
+		if (isExpired()) {
+			return false;
+		}
+		return cve.equals(finding.getVulnerability().getVulnId());
+	}
+
+	@Override
+	public CharSequence print() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("- By CVE: ");
+		builder.append("[").append(cve).append("]");
+		builder.append(" [expired: ").append(isExpired() ? "yes": "no").append("]");
+		return builder.toString();
+	}
+}
