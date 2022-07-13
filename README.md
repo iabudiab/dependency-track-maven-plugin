@@ -65,7 +65,19 @@ In order to suppress findings a `JSON` file containing suppression definitions c
 |---------------|-------------------------------|----------------------------------------|
 | `suppression` | Path to the suppressions file | `${project.basedir}/suppressions.json` |
 
-Currently the plugin supports these kinds of suppressions:
+
+```json
+{
+  "suppressions": [
+     {
+       "by": "purl",
+       "purl": "pkg:maven/org.springframework/spring-web@5.3.10?type=jar"
+     }
+  ]
+}
+```
+
+Currently, the plugin supports these kinds of suppressions:
 
 - **By PURL**: Suppresses all findings for a given component identified by its `purl`
 
