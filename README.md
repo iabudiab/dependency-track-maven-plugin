@@ -87,7 +87,7 @@ Currently, the plugin supports these kinds of suppressions:
   "purl": "pkg:maven/org.springframework/spring-web@5.3.10?type=jar",
   "regex": false,
   "expiration": "2022-12-23",
-  "note": "Some notes explaining why this was suppressed"  
+  "notes": "Some notes explaining why this was suppressed"
 }
 ```
 
@@ -98,7 +98,7 @@ Currently, the plugin supports these kinds of suppressions:
   "by": "cve",
   "cve": "CVE-2021-22096",
   "expiration": "2022-12-23",
-  "note": "Some notes explaining why this was suppressed"  
+  "notes": "Some notes explaining why this was suppressed"
 }
 ```
 
@@ -111,7 +111,7 @@ Currently, the plugin supports these kinds of suppressions:
   "purl": ".*org.springframework\/spring-web.*",
   "regex": true,
   "expiration": "2022-12-23",
-  "note": "Some notes explaining why this was suppressed"  
+  "notes": "Some notes explaining why this was suppressed"
 }
 ```
 
@@ -205,7 +205,7 @@ The token value can be either read from a file via the `tokenFile` or passed dir
 If both are set then `tokenValue` takes precedence over `tokenFile`.
 
 Configuration:
- 
+
 | Parameter                 | Description                                                | Default Value                                                                   |
 |---------------------------|------------------------------------------------------------|---------------------------------------------------------------------------------|
 | `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}`                                      |
@@ -222,7 +222,7 @@ Configuration:
 Checks a project's current metrics and applies a `SecurityGate` on any current findings.
 
 Configuration:
- 
+
 | Parameter                 | Description                                                | Default Value                                                                   |
 |---------------------------|------------------------------------------------------------|---------------------------------------------------------------------------------|
 | `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}`                                      |
@@ -237,7 +237,7 @@ Computes a diff between two local BOM files and outputs the results.
 
 The resulting diff indicates for each component whether it is `added`, `removed` or stays `unchanged` if the `first` BOM is applied to the `second`.
 
-This goal mimics the behaviour of the same command in [cyclonedx-cli](https://github.com/CycloneDX/cyclonedx-cli). 
+This goal mimics the behaviour of the same command in [cyclonedx-cli](https://github.com/CycloneDX/cyclonedx-cli).
 
 - The **JSON** output format produces the same results as the `cyclonedx-cli`, which can be written to a destination file.
 - The **TEXT** output format produces the same textual output in stdout as  `cyclonedx-cli`.
@@ -255,7 +255,7 @@ Configuration:
 
 ### diff-dependency-track
 
-Computes a diff between a local BOM file and its counterpart of the corresponding project in Dependency-Track. This can be used, 
+Computes a diff between a local BOM file and its counterpart of the corresponding project in Dependency-Track. This can be used,
 for example, to check if the local state differs from the last imported BOM in Dependency-Track and act accordingly.
 
 
