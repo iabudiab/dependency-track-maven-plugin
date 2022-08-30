@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.*;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
+import iabudiab.maven.plugins.dependencytrack.client.model.State;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -19,6 +20,8 @@ public interface Suppression {
 	String getType();
 
 	String getNotes();
+
+	State getState();
 
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	LocalDate getExpiration();

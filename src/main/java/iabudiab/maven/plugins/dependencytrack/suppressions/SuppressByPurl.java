@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
+import iabudiab.maven.plugins.dependencytrack.client.model.State;
 import lombok.Data;
 
 @Data
@@ -15,6 +16,7 @@ public class SuppressByPurl implements Suppression {
 	private String type = "purl";
 
 	private String notes;
+	private State state = State.NOT_SET;
 	private LocalDate expiration = LocalDate.MAX;
 	private String purl;
 
