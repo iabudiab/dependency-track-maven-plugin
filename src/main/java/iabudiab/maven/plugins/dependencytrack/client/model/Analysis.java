@@ -23,11 +23,16 @@ public class Analysis {
 	@JsonProperty("analysisState")
 	private State state;
 
+	@JsonProperty("analysisJustification")
+	private AnalysisJustification justification;
+
+	@JsonProperty("analysisResponse")
+	private AnalysisResponse response;
+
 	@JsonProperty("comment")
 	private String comment;
 
 	@JsonProperty("isSuppressed")
 	private boolean suppressed;
-
 
 }

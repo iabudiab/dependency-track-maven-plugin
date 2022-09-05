@@ -3,6 +3,9 @@ package iabudiab.maven.plugins.dependencytrack.suppressions;
 import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.*;
+
+import iabudiab.maven.plugins.dependencytrack.client.model.AnalysisJustification;
+import iabudiab.maven.plugins.dependencytrack.client.model.AnalysisResponse;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
 import iabudiab.maven.plugins.dependencytrack.client.model.State;
 
@@ -22,6 +25,10 @@ public interface Suppression {
 	String getNotes();
 
 	State getState();
+
+	AnalysisJustification getJustification();
+
+	AnalysisResponse getResponse();
 
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	LocalDate getExpiration();

@@ -88,7 +88,9 @@ Currently, the plugin supports these kinds of suppressions:
   "regex": false,
   "expiration": "2022-12-23",
   "notes": "Some notes explaining why this was suppressed",
-  "state": "NOT_AFFECTED"
+  "state": "NOT_AFFECTED",
+  "justification": "REQUIRES_CONFIGURATION",
+  "response": "WILL_NOT_FIX"
 }
 ```
 
@@ -100,7 +102,9 @@ Currently, the plugin supports these kinds of suppressions:
   "cve": "CVE-2021-22096",
   "expiration": "2022-12-23",
   "notes": "Some notes explaining why this was suppressed",
-  "state": "FALSE_POSITIVE"
+  "state": "FALSE_POSITIVE",
+  "justification": "NOT_SET",
+  "response": "WORKAROUND_AVAILABLE"
 }
 ```
 
@@ -114,7 +118,9 @@ Currently, the plugin supports these kinds of suppressions:
   "regex": true,
   "expiration": "2022-12-23",
   "notes": "Some notes explaining why this was suppressed",
-  "state": "RESOLVED"
+  "state": "RESOLVED",
+  "justification": "NOT_SET",
+  "response": "NOT_SET"
 }
 ```
 

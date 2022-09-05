@@ -177,6 +177,8 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 					analysis.setSuppressed(true);
 					analysis.setComment(suppression.getNotes());
 					analysis.setState(suppression.getState());
+					analysis.setJustification(suppression.getJustification());
+					analysis.setResponse(suppression.getResponse());
 					try {
 						client.uploadAnalysis(analysis);
 					} catch (IOException e) {
