@@ -20,7 +20,7 @@ import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
  * Base class for all <a href=
  * "https://github.com/DependencyTrack/dependency-track">Dependency-Track</a>
  * related Mojos
- * 
+ *
  * @author Iskandar Abudiab
  *
  */
@@ -34,9 +34,9 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 
 	/**
 	 * An API key for Dependency-Track.
-	 * 
+	 *
 	 * The API key should have sufficient permissions:
-	 * 
+	 *
 	 * <ul>
 	 * <li><b>BOM_UPLOAD</b>: Allows the uploading of CycloneDX and SPDX BOMs
 	 * <li><b>SCAN_UPLOAD</b>: Allows the uploading of Dependency-Check XML reports
@@ -44,7 +44,7 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 	 * trending and results
 	 * <li><b>PROJECT_CREATION_UPLOAD</b>: Allows the dynamic creation of projects
 	 * </ul>
-	 * 
+	 *
 	 */
 	@Parameter(property = "dependencyTrackApiKey", required = true)
 	private String dependencyTrackApiKey;
@@ -52,7 +52,7 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 	/**
 	 * The project name in Dependency-Track. This name should be unique in a
 	 * Dependency-Track installation.
-	 * 
+	 *
 	 * If the project doesn't exist, it will be created automatically. The API key
 	 * should have the <b>PROJECT_CREATION_UPLOAD</b> permission.
 	 */
@@ -76,6 +76,14 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 	 */
 	@Parameter(property = "suppressions", defaultValue = "${project.basedir}/suppressions.json", required = false)
 	private String suppressionsFile;
+
+
+	/**
+	 * Whether matching local suppressions for actual findings should be applied remotely in dependency track.
+	 */
+	@Parameter(property = "uploadMatchingSuppressions", defaultValue = "false", required = false)
+	protected boolean uploadMatchingSuppressions;
+
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -126,8 +134,9 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 
 	private void logConfiguration() {
 		getLog().info("DependencyTrack Maven Plugin");
-		getLog().info("DependencyTrack URL   : " + dependencyTrackUrl);
-		getLog().info("Project name          : " + projectName);
-		getLog().info("Project version       : " + projectVersion);
+		getLog().info("DependencyTrack URL             : " + dependencyTrackUrl);
+		getLog().info("Project name                    : " + projectName);
+		getLog().info("Project version                 : " + projectVersion);
+		getLog().info("Upload matching suppressions    : " + uploadMatchingSuppressions);
 	}
 }

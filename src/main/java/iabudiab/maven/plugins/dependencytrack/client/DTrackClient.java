@@ -37,6 +37,7 @@ import org.apache.maven.plugin.logging.Log;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import iabudiab.maven.plugins.dependencytrack.client.model.Analysis;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
 import iabudiab.maven.plugins.dependencytrack.client.model.Project;
@@ -62,6 +63,7 @@ public class DTrackClient {
 	private static final String API_PROJECT_LOOKUP = "project/lookup";
 	private static final String API_PROJECT_FINDINGS = "finding/project/";
 	private static final String API_PROJECT_METRICS = "metrics/project/";
+	private static final String API_ANALYSIS = "analysis";
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 	private final String dependencyTrackApiKey;
@@ -95,6 +97,14 @@ public class DTrackClient {
 		headersList.add(contentType);
 		headersList.add(apiKey);
 		return headersList;
+	}
+
+	public void uploadAnalysis(Analysis payload) throws IOException {
+		URI uri = baseUri.resolve(API_ANALYSIS);
+		String payloadAsString = objectMapper.writeValueAsString(payload);
+		HttpPut request = httpPut(uri, payloadAsString);
+		log.info("Uploading analysis: " + payloadAsString);
+		client.execute(request, responseBodyHandler());
 	}
 
 	public void uploadScan(ScanSubmitRequest payload) throws IOException {

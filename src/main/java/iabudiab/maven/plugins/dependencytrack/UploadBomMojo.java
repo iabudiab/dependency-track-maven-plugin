@@ -13,24 +13,26 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
+import iabudiab.maven.plugins.dependencytrack.client.model.Analysis;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
 import iabudiab.maven.plugins.dependencytrack.client.model.FindingsReport;
 import iabudiab.maven.plugins.dependencytrack.client.model.Project;
 import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
+import iabudiab.maven.plugins.dependencytrack.suppressions.Suppression;
+import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 
 /**
  * Mojo for uploading a <a href="https://cyclonedx.org">CycloneDX</a> SBOM to
  * <a href="https://dependencytrack.org">Dependency-Track</a>
- * 
+ *
  * @author Iskandar Abudiab
  *
  */
@@ -69,7 +71,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 	/**
 	 * Polling timeout for the uploaded BOM token.
-	 * 
+	 *
 	 * Upon uploading a BOM to Dependency-Track a token is returned, which can be
 	 * checked for processing status. Once the token is processed, the findings are
 	 * available and can be fetched for further analysis.
@@ -161,6 +163,33 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		getLog().info(projectMetrics.printMetrics());
 		getLog().info(securityGate.printThresholds());
 		getLog().info(suppressions.printSummary());
+
+
+		if(findings != null && uploadMatchingSuppressions) {
+			for (Finding finding : findings) {
+				Suppression suppression = suppressions.hasSuppression(finding);
+
+				if (suppression != null) {
+					Analysis analysis = new Analysis();
+					analysis.setProjectUuid(project.getUuid());
+					analysis.setComponentUuid(finding.getComponent().getUuid());
+					analysis.setVulnerabilityUuid(finding.getVulnerability().getUuid());
+					analysis.setSuppressed(true);
+					analysis.setComment(suppression.getNotes());
+					analysis.setState(suppression.getState());
+					analysis.setJustification(suppression.getJustification());
+					analysis.setResponse(suppression.getResponse());
+					try {
+						client.uploadAnalysis(analysis);
+					} catch (IOException e) {
+						throw new MojoExecutionException("Error uploading suppression analysis: ", e);
+					}
+				}
+			}
+		}
+		else {
+			getLog().info("Skip checking for matching suppressions to be uploaded");
+		}
 
 		SecurityGate.SecurityReport securityReport = securityGate.applyOn(findings, suppressions);
 		securityReport.execute(getLog());
