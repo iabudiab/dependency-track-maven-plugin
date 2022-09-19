@@ -164,34 +164,37 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		getLog().info(securityGate.printThresholds());
 		getLog().info(suppressions.printSummary());
 
-
-		if(findings != null && uploadMatchingSuppressions) {
-			for (Finding finding : findings) {
-				Suppression suppression = suppressions.hasSuppression(finding);
-
-				if (suppression != null) {
-					Analysis analysis = new Analysis();
-					analysis.setProjectUuid(project.getUuid());
-					analysis.setComponentUuid(finding.getComponent().getUuid());
-					analysis.setVulnerabilityUuid(finding.getVulnerability().getUuid());
-					analysis.setSuppressed(true);
-					analysis.setComment(suppression.getNotes());
-					analysis.setState(suppression.getState());
-					analysis.setJustification(suppression.getJustification());
-					analysis.setResponse(suppression.getResponse());
-					try {
-						client.uploadAnalysis(analysis);
-					} catch (IOException e) {
-						throw new MojoExecutionException("Error uploading suppression analysis: ", e);
-					}
-				}
-			}
-		}
-		else {
-			getLog().info("Skip checking for matching suppressions to be uploaded");
-		}
+		uploadSuppressions(client, suppressions, project, findings);
 
 		SecurityGate.SecurityReport securityReport = securityGate.applyOn(findings, suppressions);
 		securityReport.execute(getLog());
+	}
+
+	private void uploadSuppressions(DTrackClient client, Suppressions suppressions, Project project, List<Finding> findings) throws MojoExecutionException {
+		if (findings == null || !uploadMatchingSuppressions) {
+			getLog().info("Skip checking for matching suppressions to be uploaded");
+			return;
+		}
+
+		for (Finding finding : findings) {
+			Suppression suppression = suppressions.hasSuppression(finding);
+
+			if (suppression != null) {
+				Analysis analysis = new Analysis();
+				analysis.setProjectUuid(project.getUuid());
+				analysis.setComponentUuid(finding.getComponent().getUuid());
+				analysis.setVulnerabilityUuid(finding.getVulnerability().getUuid());
+				analysis.setSuppressed(true);
+				analysis.setComment(suppression.getNotes());
+				analysis.setState(suppression.getState());
+				analysis.setJustification(suppression.getJustification());
+				analysis.setResponse(suppression.getResponse());
+				try {
+					client.uploadAnalysis(analysis);
+				} catch (IOException e) {
+					throw new MojoExecutionException("Error uploading suppression analysis: ", e);
+				}
+			}
+		}
 	}
 }

@@ -77,14 +77,6 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 	@Parameter(property = "suppressions", defaultValue = "${project.basedir}/suppressions.json", required = false)
 	private String suppressionsFile;
 
-
-	/**
-	 * Whether matching local suppressions for actual findings should be applied remotely in dependency track.
-	 */
-	@Parameter(property = "uploadMatchingSuppressions", defaultValue = "false", required = false)
-	protected boolean uploadMatchingSuppressions;
-
-
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		logConfiguration();
@@ -137,6 +129,5 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 		getLog().info("DependencyTrack URL             : " + dependencyTrackUrl);
 		getLog().info("Project name                    : " + projectName);
 		getLog().info("Project version                 : " + projectVersion);
-		getLog().info("Upload matching suppressions    : " + uploadMatchingSuppressions);
 	}
 }
