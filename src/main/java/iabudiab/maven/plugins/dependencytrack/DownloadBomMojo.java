@@ -43,6 +43,12 @@ public class DownloadBomMojo extends AbstractDependencyTrackMojo {
 	private boolean failedOnNotFound;
 
 	@Override
+	protected void logGoalConfiguration() {
+		getLog().info("Destination path                : " + destinationPath);
+		getLog().info("Output format                   : " + outputFormat);
+	}
+
+	@Override
 	protected void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException {
 		validateArguments();
 

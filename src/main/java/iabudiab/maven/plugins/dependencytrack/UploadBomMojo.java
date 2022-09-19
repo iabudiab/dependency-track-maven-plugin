@@ -34,7 +34,6 @@ import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
  * <a href="https://dependencytrack.org">Dependency-Track</a>
  *
  * @author Iskandar Abudiab
- *
  */
 @Mojo(name = "upload-bom", defaultPhase = LifecyclePhase.VERIFY, requiresOnline = true)
 public class UploadBomMojo extends AbstractDependencyTrackMojo {
@@ -53,12 +52,12 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 	/**
 	 * Whether to poll the pending token for processing.
-	 *
+	 * <p>
 	 * Default is <code>true</code>, which would poll the token for <code>tokenPollingDuration</code>
 	 * and apply the <code>SecurityGate</code> afterwards.
-	 *
+	 * <p>
 	 * If set to <code>false</code> then this goal would upload the BOM, write the token
-	 * to a a file at <code>tokenFile</code> and then exit.
+	 * to a file at <code>tokenFile</code> and then exit.
 	 */
 	@Parameter(defaultValue = "true", property = "pollToken", required = true)
 	private boolean pollToken;
@@ -71,7 +70,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 	/**
 	 * Polling timeout for the uploaded BOM token.
-	 *
+	 * <p>
 	 * Upon uploading a BOM to Dependency-Track a token is returned, which can be
 	 * checked for processing status. Once the token is processed, the findings are
 	 * available and can be fetched for further analysis.
@@ -87,17 +86,30 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	@Parameter(property = "securityGate", required = false)
 	private SecurityGate securityGate = SecurityGate.strict();
 
+	/**
+	 * Whether matching local suppressions for actual findings should be applied remotely in dependency track.
+	 */
+	@Parameter(property = "uploadMatchingSuppressions", defaultValue = "false", required = false)
+	protected boolean uploadMatchingSuppressions;
+
+	@Override
+	protected void logGoalConfiguration() {
+		getLog().info("Using artifact directory        : " + artifactDirectory);
+		getLog().info("Using artifact                  : " + artifactName);
+		getLog().info("Upload matching suppressions    : " + uploadMatchingSuppressions);
+	}
+
 	@Override
 	protected void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException, SecurityGateRejectionException {
 		Path path = Paths.get(artifactDirectory.getPath(), artifactName);
 		String encodeArtifact = Utils.loadAndEncodeArtifactFile(path);
 
 		BomSubmitRequest payload = BomSubmitRequest.builder() //
-				.projectName(projectName) //
-				.projectVersion(projectVersion) //
-				.bom(encodeArtifact) //
-				.autoCreate(true) //
-				.build();
+			.projectName(projectName) //
+			.projectVersion(projectVersion) //
+			.bom(encodeArtifact) //
+			.autoCreate(true) //
+			.build();
 
 		TokenResponse tokenResponse;
 		try {
@@ -112,7 +124,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			byte[] tokenBytes = tokenResponse.getToken().toString().getBytes(StandardCharsets.UTF_8);
 
 			Files.write(tokenFilePath, tokenBytes,
-					StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+				StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
 			getLog().info("Token has been written to: " + tokenFilePath.toString());
 		} catch (IOException e) {
 			throw new MojoExecutionException("Error writing token: ", e);
@@ -132,14 +144,14 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 		try {
 			boolean isProcessingToken = client
-					.pollTokenProcessing(tokenResponse.getToken(), ForkJoinPool.commonPool()) //
-					.get(tokenPollingDuration, TimeUnit.SECONDS);
+				.pollTokenProcessing(tokenResponse.getToken(), ForkJoinPool.commonPool()) //
+				.get(tokenPollingDuration, TimeUnit.SECONDS);
 
 			if (isProcessingToken) {
 				getLog().info("Timeout while waiting for BOM token, bailing out.");
 				return;
 			}
-		} catch (TimeoutException| InterruptedException | ExecutionException e) {
+		} catch (TimeoutException | InterruptedException | ExecutionException e) {
 			Thread.currentThread().interrupt();
 			throw new MojoExecutionException("Error processing project findings: ", e);
 		}

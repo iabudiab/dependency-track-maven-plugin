@@ -80,6 +80,7 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		logConfiguration();
+		logGoalConfiguration();
 
 		try {
 			DTrackClient client = new DTrackClient(dependencyTrackUrl, dependencyTrackApiKey, getLog());
@@ -120,6 +121,10 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 				getLog().warn(e.getMessage());
 			}
 		}
+	}
+
+	protected void logGoalConfiguration() {
+		// NOOP
 	}
 
 	protected abstract void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException, MojoFailureException;

@@ -48,6 +48,13 @@ public class DiffWithDependencyTrackBomMojo extends AbstractDependencyTrackMojo 
 	private String outputPath;
 
 	@Override
+	protected void logGoalConfiguration() {
+		getLog().info("Diff local BOM                  : " + localBomPath);
+		getLog().info("Output format                   : " + outputFormat);
+		getLog().info("Output path                     : " + outputPath);
+	}
+
+	@Override
 	protected void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException, MojoFailureException {
 		Bom localBom = BomUtils.readBomAtPath(Paths.get(localBomPath));
 		Bom remoteBom = loadRemoteBom(client);

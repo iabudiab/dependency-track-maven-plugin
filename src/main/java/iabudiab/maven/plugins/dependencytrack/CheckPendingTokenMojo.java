@@ -63,6 +63,13 @@ public class CheckPendingTokenMojo extends AbstractDependencyTrackMojo {
 	private SecurityGate securityGate = SecurityGate.strict();
 
 	@Override
+	protected void logGoalConfiguration() {
+		getLog().info("Using token file                : " + tokenFile);
+		getLog().info("Token value                     : " + tokenValue);
+		getLog().info("Token poll duration             : " + tokenPollingDuration);
+	}
+
+	@Override
 	protected void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException, SecurityGateRejectionException {
 		Project project;
 		try {
