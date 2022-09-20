@@ -124,8 +124,6 @@ Currently, the plugin supports these kinds of suppressions:
 }
 ```
 
-
-
 ## Goals
 
 - [upload-bom](#upload-bom)
@@ -178,21 +176,23 @@ This goal polls Dependency-Track for `tokenPollingDuration`, which defaults to `
 </plugin>
 ```
 
-If a matching suppression found for a finding returned from server and `uploadMatchingSuppressions` is set to `true`, it will be suppressed in dtrack server too by using the provided information.
+- If a matching suppression found for a finding returned from server and `uploadMatchingSuppressions` is set to `true`, it will be suppressed in Dependency-Track server too by using the provided information.
+- If a matching suppression found for a finding returned from server and `resetExpiredSuppressions` is set to `true`, then the corresponding Analysis is reset in Dependency-Track server, whn the local suppression expires.
 
 Configuration:
 
-| Parameter                    | Description                                                    | Default Value                                                                   |
-|------------------------------|----------------------------------------------------------------|---------------------------------------------------------------------------------|
-| `projectName`                | The unique name of the porject in Dependency-Track             | `${project.groupId}.${project.artifactId}`                                      |
-| `projectVersion`             | The version of the project in Dependency-Track                 | `${project.version}`                                                            |
-| `artifactDir`                | The directory of the artifact to upload                        | `${project.build.directory}`                                                    |
-| `artifactName`               | The name of the artifact to upload                             | `bom.xml`                                                                       |
-| `pollToken`                  | Whether to poll the pending token for processing or not        | `true`                                                                          |
-| `tokenFile`                  | The file path into which the token will be written             | `${project.build.directory}/dependency-track/pendingToken`                      |
-| `tokenPollingDuration`       | Polling timeout for the uploaded BOM token.                    | `60` seconds                                                                    |
-| `securityGate`               | The security gate configuration                                | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul>   |
-| `uploadMatchingSuppressions` | Whether to upload matching suppression or not	                | `false`                                                                         |
+| Parameter                    | Description                                             | Default Value                                                                 |
+|------------------------------|---------------------------------------------------------|-------------------------------------------------------------------------------|
+| `projectName`                | The unique name of the porject in Dependency-Track      | `${project.groupId}.${project.artifactId}`                                    |
+| `projectVersion`             | The version of the project in Dependency-Track          | `${project.version}`                                                          |
+| `artifactDir`                | The directory of the artifact to upload                 | `${project.build.directory}`                                                  |
+| `artifactName`               | The name of the artifact to upload                      | `bom.xml`                                                                     |
+| `pollToken`                  | Whether to poll the pending token for processing or not | `true`                                                                        |
+| `tokenFile`                  | The file path into which the token will be written      | `${project.build.directory}/dependency-track/pendingToken`                    |
+| `tokenPollingDuration`       | Polling timeout for the uploaded BOM token.             | `60` seconds                                                                  |
+| `securityGate`               | The security gate configuration                         | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul> |
+| `uploadMatchingSuppressions` | Whether to upload matching suppression or not	          | `false`                                                                       |
+| `resetExpiredSuppressions`   | Whether to reset matching expired suppression or not    | `true`                                                                        |
 
 ---
 
@@ -286,21 +286,21 @@ Configuration:
 
 ### Summary
 
-Here are all the configuration parameters summarized:
+Here are all the main configuration parameters summarized:
 
-| Parameter                    | Description                                          | Default Value                                                                                            |
-|------------------------------|------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
-| `dependencyTrackUrl`         | The URL of the Dependency-Track Server               |                                                                                                          |
-| `dependencyTrackApiKey`      | An API key for Dependency-Track                      |                                                                                                          |
-| `failOnError`                | Whether errors should fail the build                 | `true`                                                                                                   |
-| `projectName`                | The unique name of the porject in Dependency-Track   | `${project.groupId}.${project.artifactId}`                                                               |
-| `projectVersion`             | The version of the project in Dependency-Track       | `${project.version}`                                                                                     |
-| `artifactDir`                | The directory of the artifact to upload              | `${project.build.directory}`                                                                             |
-| `artifactName`               | The name of the artifact to upload                   | <ul><li>`upload-scan` goal: `dependency-check-report.xml`</li><li>`upload-bom` goal: `bom.xml`</li></ul> |
-| `tokenPollingDuration`       | Polling timeout for the uploaded BOM token.          | `60` seconds                                                                                             |
-| `securityGate`               | The security gate configuration                      | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul>                            |
-| `suppressions`               | Path to the suppressions file                        | `${project.basedir}/suppressions.json`                                                                   |
-| `uploadMatchingSuppressions` | Whether to upload matching suppression or not	      | `false`                                                                                                  |
+| Parameter                    | Description                                              | Default Value                                                                                            |
+|------------------------------|----------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| `dependencyTrackUrl`         | The URL of the Dependency-Track Server                   |                                                                                                          |
+| `dependencyTrackApiKey`      | An API key for Dependency-Track                          |                                                                                                          |
+| `failOnError`                | Whether errors should fail the build                     | `true`                                                                                                   |
+| `logPayloads`                | Whether the plugin should log request/response payloads  | `false`                                                                                                  |
+| `projectName`                | The unique name of the porject in Dependency-Track       | `${project.groupId}.${project.artifactId}`                                                               |
+| `projectVersion`             | The version of the project in Dependency-Track           | `${project.version}`                                                                                     |
+| `artifactDir`                | The directory of the artifact to upload                  | `${project.build.directory}`                                                                             |
+| `artifactName`               | The name of the artifact to upload                       | <ul><li>`upload-scan` goal: `dependency-check-report.xml`</li><li>`upload-bom` goal: `bom.xml`</li></ul> |
+| `tokenPollingDuration`       | Polling timeout for the uploaded BOM token.              | `60` seconds                                                                                             |
+| `securityGate`               | The security gate configuration                          | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul>                            |
+| `suppressions`               | Path to the suppressions file                            | `${project.basedir}/suppressions.json`                                                                   |
 
 
 # License
