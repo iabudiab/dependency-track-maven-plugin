@@ -77,6 +77,12 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 	@Parameter(property = "suppressions", defaultValue = "${project.basedir}/suppressions.json", required = false)
 	private String suppressionsFile;
 
+	/**
+	 * If set to true, the plugin would log request and response payloads into the console.
+	 */
+	@Parameter(property = "logPayloads", defaultValue = "false", required = false)
+	private boolean logPayloads;
+
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		logConfiguration();
@@ -84,6 +90,8 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 
 		try {
 			DTrackClient client = new DTrackClient(dependencyTrackUrl, dependencyTrackApiKey, getLog());
+			client.setLogPayloads(logPayloads);
+
 			Suppressions suppressions = loadSuppressions();
 			doWork(client, suppressions);
 		} catch (URISyntaxException e) {

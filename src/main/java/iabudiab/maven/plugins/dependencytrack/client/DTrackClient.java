@@ -71,10 +71,13 @@ public class DTrackClient {
 	private final CloseableHttpClient client;
 	private final URI baseUri;
 
+	private boolean logPayloads;
+
 	public DTrackClient(String dependencyTrackUrl, String dependencyTrackApiKey, Log log) throws URISyntaxException {
 		this.dependencyTrackApiKey = dependencyTrackApiKey;
 		this.baseUri = new URI(dependencyTrackUrl).resolve(API_V1);
 		this.log = log;
+		this.logPayloads = false;
 
 		RequestConfig config = RequestConfig.custom() //
 				.setConnectTimeout(DEFAULT_TIMEOUT * 1000) //
@@ -90,6 +93,10 @@ public class DTrackClient {
 		log.info("Using API v1 at: " + baseUri);
 	}
 
+	public void setLogPayloads(boolean logPayloads) {
+		this.logPayloads = logPayloads;
+	}
+
 	public List<Header> apiHeaders() {
 		Header contentType = new BasicHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 		Header apiKey = new BasicHeader(DEPENDENCY_TRACK_API_KEY_HEADER, dependencyTrackApiKey);
@@ -103,7 +110,11 @@ public class DTrackClient {
 		URI uri = baseUri.resolve(API_ANALYSIS);
 		String payloadAsString = objectMapper.writeValueAsString(payload);
 		HttpPut request = httpPut(uri, payloadAsString);
-		log.info("Uploading analysis: " + payloadAsString);
+		log.info("Uploading analysis for project: " + payload.getProjectUuid()
+			+ ", component=" + payload.getComponentUuid() + ", vulnerability=" + payload.getVulnerabilityUuid());
+		if (logPayloads) {
+			log.info("Analysis payload: ");
+		}
 		client.execute(request, responseBodyHandler());
 	}
 
@@ -111,7 +122,7 @@ public class DTrackClient {
 		URI uri = baseUri.resolve(API_UPLOAD_SCAN);
 		String payloadAsString = objectMapper.writeValueAsString(payload);
 		HttpPut request = httpPut(uri, payloadAsString);
-		log.info("Uploading scan artifact to: {}" + uri);
+		log.info("Uploading scan artifact to: " + uri);
 		client.execute(request, responseBodyHandler());
 	}
 
@@ -175,8 +186,8 @@ public class DTrackClient {
 	}
 
 	public List<Finding> getProjectFindings(UUID projectId) throws IOException {
-		URI uri = baseUri.resolve(API_PROJECT_FINDINGS + projectId.toString());
-		log.debug("Invoking uri => " + uri.toString());
+		URI uri = baseUri.resolve(API_PROJECT_FINDINGS + projectId.toString() + "?suppressed=true");
+		log.debug("Invoking uri => " + uri);
 		HttpGet request = httpGet(uri);
 		Finding[] findings = client.execute(request, responseBodyHandler(Finding[].class));
 		return Arrays.asList(findings);
@@ -184,7 +195,7 @@ public class DTrackClient {
 
 	public ProjectMetrics getProjectMetrics(UUID projectId) throws IOException {
 		URI uri = baseUri.resolve(API_PROJECT_METRICS + projectId.toString() + "/current");
-		log.debug("Invoking uri => " + uri.toString());
+		log.debug("Invoking uri => " + uri);
 		HttpGet request = httpGet(uri);
 		return client.execute(request, responseBodyHandler(ProjectMetrics.class));
 	}
@@ -194,7 +205,9 @@ public class DTrackClient {
 			processResponseStatus(response);
 			String responseString = EntityUtils.toString(response.getEntity());
 			if (responseString != null) {
-				log.info("Response string " + responseString);
+				if (logPayloads) {
+					log.info("Response string " + responseString);
+				}
 				return objectMapper.readValue(responseString, responseType);
 			} else {
 				log.warn("Unable to find response string, returning null ");
