@@ -29,11 +29,7 @@ public class SuppressCveOfPurl implements Suppression {
 	private boolean regex = false;
 
 	@Override
-	public boolean shouldSuppress(Finding finding) {
-		if (isExpired()) {
-			return false;
-		}
-
+	public boolean suppressesFinding(Finding finding) {
 		if (!cve.equals(finding.getVulnerability().getVulnId())) {
 			return false;
 		}

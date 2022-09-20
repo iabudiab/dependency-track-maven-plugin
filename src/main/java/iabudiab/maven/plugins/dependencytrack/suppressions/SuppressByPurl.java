@@ -28,11 +28,7 @@ public class SuppressByPurl implements Suppression {
 	private boolean regex = false;
 
 	@Override
-	public boolean shouldSuppress(Finding finding) {
-		if (isExpired()) {
-			return false;
-		}
-
+	public boolean suppressesFinding(Finding finding) {
 		if (regex) {
 			Pattern pattern = Pattern.compile(purl);
 			Matcher matcher = pattern.matcher(finding.getComponent().getPurl());

@@ -34,12 +34,13 @@ public class FindingsReport {
 			builder.append("\n");
 			builder.append("   Vulnerability: ").append(finding.getVulnerability().reportSummary());
 			builder.append("\n");
-			builder.append("   Analysis     : ").append(Optional.ofNullable(finding.getAnalysis())
-				.map(Analysis::getState)
-				.orElse(State.NOT_SET));
+			builder.append("   Analysis     : ").append(Optional.ofNullable(finding.getAnalysis()).map(Analysis::getState).orElse(State.NOT_SET));
+			builder.append("\n");
+			builder.append("   Suppressed   : ").append(Optional.ofNullable(finding.getAnalysis()).map(Analysis::isSuppressed).orElse(false));
 			builder.append("\n");
 		}
 
+		builder.append("\n");
 		builder.append("+ False positives : ").append(falsePositives);
 		builder.append("\n");
 		builder.append("+ Not affected    : ").append(notAffected);

@@ -22,13 +22,12 @@ public class Suppressions {
 
 	public boolean shouldSuppress(Finding finding) {
 		return suppressions.stream()
-			.filter(Suppression::isNotExpired)
 			.anyMatch(suppression -> suppression.shouldSuppress(finding));
 	}
 
 	public Suppression hasSuppression(Finding finding) {
 		for (Suppression suppression : suppressions) {
-			if (suppression.isNotExpired() && suppression.shouldSuppress(finding)) {
+			if (suppression.suppressesFinding(finding)) {
 				return suppression;
 			}
 		}

@@ -58,24 +58,42 @@ public class SecurityGate {
 		List<Finding> effectiveFindings = new ArrayList<>();
 
 		for (Finding finding : findings) {
-			Suppression suppression = suppressions.hasSuppression(finding);
-
-			if (suppression == null) {
-				effectiveFindings.add(finding);
-			} else {
-				reportBuilder.append("- Suppressed finding for: [").append(finding.getComponent().getPurl()).append("]");
+			if (finding.getAnalysis().isSuppressed()) {
+				reportBuilder.append("- Finding is already suppressed in Dependency-Track for: [").append(finding.getComponent().getPurl()).append("]");
 				reportBuilder.append(" [cve: ").append(finding.getVulnerability().getVulnId()).append("]");
 				reportBuilder.append(" [severity: ").append(finding.getVulnerability().getSeverity()).append("]");
-				if (suppression.getNotes() != null) {
-					reportBuilder.append(" [notes: ").append(suppression.getNotes()).append("]");
-				}
-
-				String expiration = suppression.getExpiration().equals(LocalDate.MAX)
-					? "never expires"
-					: suppression.getExpiration().toString();
-				reportBuilder.append(" [suppression expiration date: ").append(expiration).append("]");
 				reportBuilder.append("\n");
+				continue;
 			}
+
+			Suppression suppression = suppressions.hasSuppression(finding);
+			if (suppression == null) {
+				reportBuilder.append("- Active finding for: [").append(finding.getComponent().getPurl()).append("]");
+				reportBuilder.append(" [cve: ").append(finding.getVulnerability().getVulnId()).append("]");
+				reportBuilder.append(" [severity: ").append(finding.getVulnerability().getSeverity()).append("]");
+				reportBuilder.append("\n");
+				effectiveFindings.add(finding);
+				continue;
+			}
+
+			if (suppression.isExpired()) {
+				reportBuilder.append("- Active finding with expired custom suppression for: [").append(finding.getComponent().getPurl()).append("]");
+				effectiveFindings.add(finding);
+			} else {
+				reportBuilder.append("- Suppressed finding via custom suppression for: [").append(finding.getComponent().getPurl()).append("]");
+			}
+
+			reportBuilder.append(" [cve: ").append(finding.getVulnerability().getVulnId()).append("]");
+			reportBuilder.append(" [severity: ").append(finding.getVulnerability().getSeverity()).append("]");
+			if (suppression.getNotes() != null) {
+				reportBuilder.append(" [notes: ").append(suppression.getNotes()).append("]");
+			}
+
+			String expiration = suppression.getExpiration().equals(LocalDate.MAX)
+				? "never expires"
+				: suppression.getExpiration().toString();
+			reportBuilder.append(" [suppression expiration date: ").append(expiration).append("]");
+			reportBuilder.append("\n");
 		}
 
 		return new SecurityReport(true, reportBuilder.toString(), effectiveFindings);

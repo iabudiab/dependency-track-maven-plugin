@@ -24,10 +24,7 @@ public class SuppressCve implements Suppression {
 	private String cve;
 
 	@Override
-	public boolean shouldSuppress(Finding finding) {
-		if (isExpired()) {
-			return false;
-		}
+	public boolean suppressesFinding(Finding finding) {
 		return cve.equals(finding.getVulnerability().getVulnId());
 	}
 

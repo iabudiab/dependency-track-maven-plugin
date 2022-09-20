@@ -33,7 +33,11 @@ public interface Suppression {
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	LocalDate getExpiration();
 
-	boolean shouldSuppress(Finding finding);
+	boolean suppressesFinding(Finding finding);
+
+	default boolean shouldSuppress(Finding finding) {
+		return isNotExpired() && suppressesFinding(finding);
+	}
 
 	default boolean isExpired() {
 		return LocalDate.now().isAfter(getExpiration());

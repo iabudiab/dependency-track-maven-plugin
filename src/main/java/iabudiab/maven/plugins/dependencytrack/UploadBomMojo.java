@@ -13,19 +13,13 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import iabudiab.maven.plugins.dependencytrack.client.model.*;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
-import iabudiab.maven.plugins.dependencytrack.client.model.Analysis;
-import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
-import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
-import iabudiab.maven.plugins.dependencytrack.client.model.FindingsReport;
-import iabudiab.maven.plugins.dependencytrack.client.model.Project;
-import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
-import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
 import iabudiab.maven.plugins.dependencytrack.suppressions.Suppression;
 import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 
@@ -92,11 +86,18 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	@Parameter(property = "uploadMatchingSuppressions", defaultValue = "false", required = false)
 	protected boolean uploadMatchingSuppressions;
 
+	/**
+	 * Whether matching local suppressions for actual findings, that are expired, should be reset in dependency track.
+	 */
+	@Parameter(property = "resetExpiredSuppressions", defaultValue = "true", required = false)
+	protected boolean resetExpiredSuppressions;
+
 	@Override
 	protected void logGoalConfiguration() {
 		getLog().info("Using artifact directory        : " + artifactDirectory);
 		getLog().info("Using artifact                  : " + artifactName);
 		getLog().info("Upload matching suppressions    : " + uploadMatchingSuppressions);
+		getLog().info("Reset expired suppressions      : " + resetExpiredSuppressions);
 	}
 
 	@Override
@@ -190,22 +191,31 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 		for (Finding finding : findings) {
 			Suppression suppression = suppressions.hasSuppression(finding);
+			if (suppression == null) {
+				continue;
+			}
 
-			if (suppression != null) {
-				Analysis analysis = new Analysis();
-				analysis.setProjectUuid(project.getUuid());
-				analysis.setComponentUuid(finding.getComponent().getUuid());
-				analysis.setVulnerabilityUuid(finding.getVulnerability().getUuid());
-				analysis.setSuppressed(true);
-				analysis.setComment(suppression.getNotes());
-				analysis.setState(suppression.getState());
-				analysis.setJustification(suppression.getJustification());
-				analysis.setResponse(suppression.getResponse());
-				try {
-					client.uploadAnalysis(analysis);
-				} catch (IOException e) {
-					throw new MojoExecutionException("Error uploading suppression analysis: ", e);
-				}
+			Analysis analysis = new Analysis();
+			analysis.setProjectUuid(project.getUuid());
+			analysis.setComponentUuid(finding.getComponent().getUuid());
+			analysis.setVulnerabilityUuid(finding.getVulnerability().getUuid());
+			analysis.setSuppressed(true);
+			analysis.setComment(suppression.getNotes());
+			analysis.setState(suppression.getState());
+			analysis.setJustification(suppression.getJustification());
+			analysis.setResponse(suppression.getResponse());
+
+			if (resetExpiredSuppressions && suppression.isExpired()) {
+				analysis.setSuppressed(false);
+				analysis.setState(State.NOT_SET);
+				analysis.setJustification(AnalysisJustification.NOT_SET);
+				analysis.setResponse(AnalysisResponse.NOT_SET);
+			}
+
+			try {
+				client.uploadAnalysis(analysis);
+			} catch (IOException e) {
+				throw new MojoExecutionException("Error uploading suppression analysis: ", e);
 			}
 		}
 	}
