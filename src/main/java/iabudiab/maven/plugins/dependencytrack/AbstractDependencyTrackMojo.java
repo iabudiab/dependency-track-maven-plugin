@@ -83,10 +83,17 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 	@Parameter(property = "logPayloads", defaultValue = "false", required = false)
 	private boolean logPayloads;
 
+	@Parameter(property = "skip", defaultValue = "false", required = false)
+	private boolean skip;
+
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		logConfiguration();
 		logGoalConfiguration();
+		if(skip) {
+			getLog().info("skip is '"+ skip +"' so skipping plugin execution.");
+			return;
+		}
 
 		try {
 			DTrackClient client = new DTrackClient(dependencyTrackUrl, dependencyTrackApiKey, getLog());
@@ -142,5 +149,6 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 		getLog().info("DependencyTrack URL             : " + dependencyTrackUrl);
 		getLog().info("Project name                    : " + projectName);
 		getLog().info("Project version                 : " + projectVersion);
+		getLog().info("Skip                            : " + skip);
 	}
 }
