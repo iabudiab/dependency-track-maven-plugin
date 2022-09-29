@@ -13,10 +13,11 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
-import iabudiab.maven.plugins.dependencytrack.BomFormat;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
@@ -34,9 +35,12 @@ import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.apache.maven.plugin.logging.Log;
+import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.io.InputStreamFacade;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import iabudiab.maven.plugins.dependencytrack.BomFormat;
 import iabudiab.maven.plugins.dependencytrack.client.model.Analysis;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
@@ -45,8 +49,6 @@ import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
 import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenProcessedResponse;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
-import org.codehaus.plexus.util.FileUtils;
-import org.codehaus.plexus.util.io.InputStreamFacade;
 
 public class DTrackClient {
 
@@ -193,11 +195,46 @@ public class DTrackClient {
 		return Arrays.asList(findings);
 	}
 
+	public ProjectMetrics getProjectMetrics(UUID projectId, int retryDelay, int retryLimit) throws IOException {
+		if(retryLimit <= 0) return getProjectMetrics(projectId);
+		if(retryDelay < 0) throw new IllegalArgumentException("project metrics retry delay must be >= 0");
+
+		Supplier<ProjectMetrics> projectMetricsSupplier = () -> {
+			ProjectMetrics metrics = null;
+			try {
+				metrics = getProjectMetrics(projectId);
+			} catch(Exception ex) {
+				log.warn("got exception while obtaining project metrics for project '"+ projectId +"'", ex);
+				return null;
+			}
+			return metrics;
+		};
+		return retry(projectMetricsSupplier, metric -> metric == null, retryDelay, 0, retryLimit).join();
+	}
+
 	public ProjectMetrics getProjectMetrics(UUID projectId) throws IOException {
 		URI uri = baseUri.resolve(API_PROJECT_METRICS + projectId.toString() + "/current");
 		log.debug("Invoking uri => " + uri);
 		HttpGet request = httpGet(uri);
 		return client.execute(request, responseBodyHandler(ProjectMetrics.class));
+	}
+
+	public <R> CompletableFuture<R> retry(Supplier<R> supplier, Function<R, Boolean> retryCondition, int retryDelay, int retryCount, int retryLimit) {
+		if(retryCount > retryLimit) {
+			log.warn("hit retry limit of '"+ retryLimit +"'!");
+			CompletableFuture.completedFuture(null);
+			throw new CompletionException("hit retry limit of '"+ retryLimit +"'", null);
+		}
+
+		Executor executor = (retryCount == 0) ? ForkJoinPool.commonPool() : CompletableFutureBackports.delayedExecutor(retryDelay, TimeUnit.SECONDS);
+		return CompletableFuture.supplyAsync(supplier, executor)
+				.thenCompose(result -> {
+					if(retryCondition.apply(result)) {
+						log.info("retry condition met, so retrying after '"+ retryDelay +"' seconds (current retry count: '"+ retryCount +"'; max. retries: '"+ retryLimit +"')");
+						return retry(supplier, retryCondition, retryDelay, retryCount+1, retryLimit);
+					}
+					return CompletableFuture.completedFuture(result);
+				});
 	}
 
 	private <R> ResponseHandler<R> responseBodyHandler(final Class<R> responseType) {
