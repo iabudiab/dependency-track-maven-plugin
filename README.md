@@ -47,6 +47,10 @@ These parameters are required to configure the plugin:
 - `dependencyTrackUrl`: The URL where Dependency-Track is hosted.
 - `dependencyTrackApiKey`: The API Key for Dependency-Track.
 
+Further you skip the plugin execution with the following configuration:
+
+- `skip`: a boolean value indicating if the plugin should be executed for the current project.
+
 The API Key should have sufficient permissions depending on the performed action:
 
 | Permission                | Description                                                |
@@ -292,6 +296,7 @@ Here are all the main configuration parameters summarized:
 |------------------------------|----------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
 | `dependencyTrackUrl`         | The URL of the Dependency-Track Server                   |                                                                                                          |
 | `dependencyTrackApiKey`      | An API key for Dependency-Track                          |                                                                                                          |
+| `skip`                       | Skip plugin execution for the current project            | `false`                                                                                                  |
 | `failOnError`                | Whether errors should fail the build                     | `true`                                                                                                   |
 | `logPayloads`                | Whether the plugin should log request/response payloads  | `false`                                                                                                  |
 | `projectName`                | The unique name of the porject in Dependency-Track       | `${project.groupId}.${project.artifactId}`                                                               |
