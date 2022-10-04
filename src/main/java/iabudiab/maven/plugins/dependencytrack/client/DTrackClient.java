@@ -222,7 +222,6 @@ public class DTrackClient {
 	public <R> CompletableFuture<R> retry(Supplier<R> supplier, Function<R, Boolean> retryCondition, int retryDelay, int retryCount, int retryLimit) {
 		if(retryCount > retryLimit) {
 			log.warn("hit retry limit of '"+ retryLimit +"'!");
-			CompletableFuture.completedFuture(null);
 			throw new CompletionException("hit retry limit of '"+ retryLimit +"'", null);
 		}
 
