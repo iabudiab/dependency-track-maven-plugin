@@ -13,9 +13,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.apache.http.Header;
@@ -41,6 +39,7 @@ import org.codehaus.plexus.util.io.InputStreamFacade;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import iabudiab.maven.plugins.dependencytrack.BomFormat;
+import iabudiab.maven.plugins.dependencytrack.Utils;
 import iabudiab.maven.plugins.dependencytrack.client.model.Analysis;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
@@ -209,7 +208,7 @@ public class DTrackClient {
 			}
 			return metrics;
 		};
-		return retry(projectMetricsSupplier, metric -> metric == null, retryDelay, 0, retryLimit).join();
+		return Utils.retry(projectMetricsSupplier, metric -> metric == null, retryDelay, 0, retryLimit, log).join();
 	}
 
 	public ProjectMetrics getProjectMetrics(UUID projectId) throws IOException {
@@ -217,23 +216,6 @@ public class DTrackClient {
 		log.debug("Invoking uri => " + uri);
 		HttpGet request = httpGet(uri);
 		return client.execute(request, responseBodyHandler(ProjectMetrics.class));
-	}
-
-	public <R> CompletableFuture<R> retry(Supplier<R> supplier, Function<R, Boolean> retryCondition, int retryDelay, int retryCount, int retryLimit) {
-		if(retryCount > retryLimit) {
-			log.warn("hit retry limit of '"+ retryLimit +"'!");
-			throw new CompletionException("hit retry limit of '"+ retryLimit +"'", null);
-		}
-
-		Executor executor = (retryCount == 0) ? ForkJoinPool.commonPool() : CompletableFutureBackports.delayedExecutor(retryDelay, TimeUnit.SECONDS);
-		return CompletableFuture.supplyAsync(supplier, executor)
-				.thenCompose(result -> {
-					if(retryCondition.apply(result)) {
-						log.info("retry condition met, so retrying after '"+ retryDelay +"' seconds (current retry count: '"+ retryCount +"'; max. retries: '"+ retryLimit +"')");
-						return retry(supplier, retryCondition, retryDelay, retryCount+1, retryLimit);
-					}
-					return CompletableFuture.completedFuture(result);
-				});
 	}
 
 	private <R> ResponseHandler<R> responseBodyHandler(final Class<R> responseType) {
