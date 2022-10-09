@@ -194,8 +194,10 @@ Configuration:
 | `pollToken`                  | Whether to poll the pending token for processing or not | `true`                                                                        |
 | `tokenFile`                  | The file path into which the token will be written      | `${project.build.directory}/dependency-track/pendingToken`                    |
 | `tokenPollingDuration`       | Polling timeout for the uploaded BOM token.             | `60` seconds                                                                  |
+| `projectMetricsRetryDelay`   | Delay between each retry requesting project metrics     | `5` seconds                                                                   |
+| `projectMetricsRetryLimit`   | Maximum number of retries requesting project metrics    | `3` times                                                                     |
 | `securityGate`               | The security gate configuration                         | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul> |
-| `uploadMatchingSuppressions` | Whether to upload matching suppression or not	          | `false`                                                                       |
+| `uploadMatchingSuppressions` | Whether to upload matching suppression or not	         | `false`                                                                       |
 | `resetExpiredSuppressions`   | Whether to reset matching expired suppression or not    | `true`                                                                        |
 
 ---
@@ -304,6 +306,8 @@ Here are all the main configuration parameters summarized:
 | `artifactDir`                | The directory of the artifact to upload                  | `${project.build.directory}`                                                                             |
 | `artifactName`               | The name of the artifact to upload                       | <ul><li>`upload-scan` goal: `dependency-check-report.xml`</li><li>`upload-bom` goal: `bom.xml`</li></ul> |
 | `tokenPollingDuration`       | Polling timeout for the uploaded BOM token.              | `60` seconds                                                                                             |
+| `projectMetricsRetryDelay`   | Delay between each retry requesting project metrics      | `5` seconds                                                                                              |
+| `projectMetricsRetryLimit`   | Maximum number of retries requesting project metrics     | `3` times                                                                                                |
 | `securityGate`               | The security gate configuration                          | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul>                            |
 | `suppressions`               | Path to the suppressions file                            | `${project.basedir}/suppressions.json`                                                                   |
 

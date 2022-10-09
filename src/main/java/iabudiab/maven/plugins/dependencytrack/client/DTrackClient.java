@@ -16,7 +16,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import iabudiab.maven.plugins.dependencytrack.BomFormat;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
@@ -34,9 +33,13 @@ import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.apache.maven.plugin.logging.Log;
+import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.io.InputStreamFacade;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import iabudiab.maven.plugins.dependencytrack.BomFormat;
+import iabudiab.maven.plugins.dependencytrack.Utils;
 import iabudiab.maven.plugins.dependencytrack.client.model.Analysis;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
@@ -45,8 +48,6 @@ import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
 import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenProcessedResponse;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
-import org.codehaus.plexus.util.FileUtils;
-import org.codehaus.plexus.util.io.InputStreamFacade;
 
 public class DTrackClient {
 
@@ -191,6 +192,23 @@ public class DTrackClient {
 		HttpGet request = httpGet(uri);
 		Finding[] findings = client.execute(request, responseBodyHandler(Finding[].class));
 		return Arrays.asList(findings);
+	}
+
+	public ProjectMetrics getProjectMetrics(UUID projectId, int retryDelay, int retryLimit) throws IOException {
+		if(retryLimit <= 0) return getProjectMetrics(projectId);
+		if(retryDelay < 0) throw new IllegalArgumentException("project metrics retry delay must be >= 0");
+
+		Supplier<ProjectMetrics> projectMetricsSupplier = () -> {
+			ProjectMetrics metrics = null;
+			try {
+				metrics = getProjectMetrics(projectId);
+			} catch(Exception ex) {
+				log.warn("got exception while obtaining project metrics for project '"+ projectId +"'", ex);
+				return null;
+			}
+			return metrics;
+		};
+		return Utils.retry(projectMetricsSupplier, metric -> metric == null, retryDelay, 0, retryLimit, log).join();
 	}
 
 	public ProjectMetrics getProjectMetrics(UUID projectId) throws IOException {

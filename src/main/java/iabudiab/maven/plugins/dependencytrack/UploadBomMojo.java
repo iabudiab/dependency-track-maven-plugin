@@ -72,6 +72,12 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	@Parameter(defaultValue = "60", property = "tokenPollingDuration", required = true)
 	private Integer tokenPollingDuration;
 
+	@Parameter(defaultValue = "3", property = "projectMetricsRetryLimit", required = true)
+	private Integer projectMetricsRetryLimit;
+
+	@Parameter(defaultValue = "5", property = "projectMetricsRetryDelay", required = true)
+	private Integer projectMetricsRetryDelay;
+
 	/**
 	 * Configurable thresholds for the allowed number of <code>critical</code>,
 	 * <code>high</code>, <code>medium</code> and <code>low</code> findings from
@@ -98,6 +104,9 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		getLog().info("Using artifact                  : " + artifactName);
 		getLog().info("Upload matching suppressions    : " + uploadMatchingSuppressions);
 		getLog().info("Reset expired suppressions      : " + resetExpiredSuppressions);
+		getLog().info("ProjectMetrics retry delay      : " + projectMetricsRetryDelay);
+		getLog().info("ProjectMetrics retry limit      : " + projectMetricsRetryLimit);
+
 	}
 
 	@Override
@@ -166,11 +175,14 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			throw new RuntimeException(e);
 		}
 
-		ProjectMetrics projectMetrics;
+		ProjectMetrics projectMetrics = null;
 		try {
-			projectMetrics = client.getProjectMetrics(project.getUuid());
-		} catch (IOException e) {
-			throw new MojoExecutionException("Error fetching project metrics: ", e);
+			projectMetrics = client.getProjectMetrics(project.getUuid(), projectMetricsRetryDelay, projectMetricsRetryLimit);
+		} catch(Exception e) {
+			throw new MojoExecutionException("Error fetching project metrics", e);
+		}
+		if(projectMetrics == null) {
+			throw new MojoExecutionException("could not retrieve project metrics after '"+ projectMetricsRetryLimit +"' retries!");
 		}
 
 		getLog().info(projectMetrics.printMetrics());
