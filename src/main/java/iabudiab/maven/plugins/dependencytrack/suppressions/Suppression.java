@@ -48,4 +48,6 @@ public interface Suppression {
 	}
 
 	CharSequence print();
+
+	CharSequence printIdentifier();
 }

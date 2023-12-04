@@ -56,6 +56,8 @@ public class SecurityGate {
 		reportBuilder.append("\n");
 
 		List<Finding> effectiveFindings = new ArrayList<>();
+		List<Suppression> remainingSuppression = new ArrayList<>(suppressions.getSuppressions());
+
 
 		for (Finding finding : findings) {
 			if (finding.getAnalysis().isSuppressed()) {
@@ -76,6 +78,7 @@ public class SecurityGate {
 				continue;
 			}
 
+			remainingSuppression.remove(suppression);
 			if (suppression.isExpired()) {
 				reportBuilder.append("- Active finding with expired custom suppression for: [").append(finding.getComponent().getPurl()).append("]");
 				effectiveFindings.add(finding);
@@ -94,6 +97,10 @@ public class SecurityGate {
 				: suppression.getExpiration().toString();
 			reportBuilder.append(" [suppression expiration date: ").append(expiration).append("]");
 			reportBuilder.append("\n");
+		}
+
+		for (Suppression suppression: remainingSuppression) {
+			reportBuilder.append("- Unnecessary suppression for: ").append(suppression.printIdentifier()).append("\n");
 		}
 
 		return new SecurityReport(true, reportBuilder.toString(), effectiveFindings);

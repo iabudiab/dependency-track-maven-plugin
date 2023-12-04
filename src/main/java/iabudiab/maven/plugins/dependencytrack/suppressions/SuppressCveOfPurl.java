@@ -60,4 +60,9 @@ public class SuppressCveOfPurl implements Suppression {
 		builder.append(" [Expired: ").append(isExpired() ? "yes": "no").append("]");
 		return builder.toString();
 	}
+
+	@Override
+	public CharSequence printIdentifier() {
+		return "[" + purl + "] [" + cve + "]";
+	}
 }
