@@ -98,6 +98,19 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	@Parameter(property = "resetExpiredSuppressions", defaultValue = "true", required = false)
 	protected boolean resetExpiredSuppressions;
 
+	/**
+	 * Whether suppressions file should be created from effective suppressions.
+	 */
+	@Parameter(property = "generateSuppressions", defaultValue = "true", required = false)
+	protected boolean generateSuppressions;
+
+	/**
+	 * Suppressions file path containing effective suppressions.
+	 */
+	@Parameter(defaultValue = "${project.build.directory}/dependency-track/suppressions.json", property = "generateSuppressionsFile", required = false)
+	private String generateSuppressionsFile;
+
+
 	@Override
 	protected void logGoalConfiguration() {
 		getLog().info("Using artifact directory        : " + artifactDirectory);
@@ -193,6 +206,9 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 		SecurityGate.SecurityReport securityReport = securityGate.applyOn(findings, suppressions);
 		securityReport.execute(getLog());
+		if (generateSuppressions) {
+			securityReport.generateEffectiveSuppressionsFile(getLog(), generateSuppressionsFile);
+		}
 	}
 
 	private void uploadSuppressions(DTrackClient client, Suppressions suppressions, Project project, List<Finding> findings) throws MojoExecutionException {
