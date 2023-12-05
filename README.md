@@ -185,22 +185,22 @@ This goal polls Dependency-Track for `tokenPollingDuration`, which defaults to `
 
 Configuration:
 
-| Parameter                    | Description                                                                               | Default Value                                                                 |
-|------------------------------|-------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| `projectName`                | The unique name of the porject in Dependency-Track                                        | `${project.groupId}.${project.artifactId}`                                    |
-| `projectVersion`             | The version of the project in Dependency-Track                                            | `${project.version}`                                                          |
-| `artifactDir`                | The directory of the artifact to upload                                                   | `${project.build.directory}`                                                  |
-| `artifactName`               | The name of the artifact to upload                                                        | `bom.xml`                                                                     |
-| `pollToken`                  | Whether to poll the pending token for processing or not                                   | `true`                                                                        |
-| `tokenFile`                  | The file path into which the token will be written                                        | `${project.build.directory}/dependency-track/pendingToken`                    |
-| `tokenPollingDuration`       | Polling timeout for the uploaded BOM token.                                               | `60` seconds                                                                  |
-| `projectMetricsRetryDelay`   | Delay between each retry requesting project metrics                                       | `5` seconds                                                                   |
-| `projectMetricsRetryLimit`   | Maximum number of retries requesting project metrics                                      | `3` times <br/>                                                               |
-| `securityGate`               | The security gate configuration                                                           | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul> |
-| `uploadMatchingSuppressions` | Whether to upload matching suppression or not	                                            | `false`                                                                       |
-| `resetExpiredSuppressions`   | Whether to reset matching expired suppression or not                                      | `true`                                                                        |
-| `cleanupSuppressions`        | Whether to generate a cleaned up suppressions file without unnecessary suppressions <br/> | `true`     <br/> <br/> <br/> <br/> <br/> <br/> <br/>                          |
-| `cleanupSuppressionsFile`    | The file path into which the suppressions will be written                                 | `${project.build.directory}/dependency-track/suppressions.json `              |
+| Parameter                    | Description                                                                         | Default Value                                                                 |
+|------------------------------|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| `projectName`                | The unique name of the porject in Dependency-Track                                  | `${project.groupId}.${project.artifactId}`                                    |
+| `projectVersion`             | The version of the project in Dependency-Track                                      | `${project.version}`                                                          |
+| `artifactDir`                | The directory of the artifact to upload                                             | `${project.build.directory}`                                                  |
+| `artifactName`               | The name of the artifact to upload                                                  | `bom.xml`                                                                     |
+| `pollToken`                  | Whether to poll the pending token for processing or not                             | `true`                                                                        |
+| `tokenFile`                  | The file path into which the token will be written                                  | `${project.build.directory}/dependency-track/pendingToken`                    |
+| `tokenPollingDuration`       | Polling timeout for the uploaded BOM token.                                         | `60` seconds                                                                  |
+| `projectMetricsRetryDelay`   | Delay between each retry requesting project metrics                                 | `5` seconds                                                                   |
+| `projectMetricsRetryLimit`   | Maximum number of retries requesting project metrics                                | `3` times <br/>                                                               |
+| `securityGate`               | The security gate configuration                                                     | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul> |
+| `uploadMatchingSuppressions` | Whether to upload matching suppression or not	                                      | `false`                                                                       |
+| `resetExpiredSuppressions`   | Whether to reset matching expired suppression or not                                | `true`                                                                        |
+| `cleanupSuppressions`        | Whether to generate a cleaned up suppressions file without unnecessary suppressions | `true`                                                                        |
+| `cleanupSuppressionsFile`    | The file path into which the suppressions will be written                           | `${project.build.directory}/dependency-track/suppressions.json `              |
 
 ---
 
