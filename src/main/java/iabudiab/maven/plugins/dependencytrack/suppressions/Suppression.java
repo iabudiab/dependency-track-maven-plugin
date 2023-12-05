@@ -20,7 +20,7 @@ import iabudiab.maven.plugins.dependencytrack.client.model.State;
 public interface Suppression {
 
 	@JsonProperty("by")
-	String type = null;
+	String getType();
 
 	String getNotes();
 

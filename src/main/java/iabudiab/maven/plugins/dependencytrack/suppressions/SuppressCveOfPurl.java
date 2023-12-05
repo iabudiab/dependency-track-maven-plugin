@@ -10,23 +10,51 @@ import iabudiab.maven.plugins.dependencytrack.client.model.AnalysisJustification
 import iabudiab.maven.plugins.dependencytrack.client.model.AnalysisResponse;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
 import iabudiab.maven.plugins.dependencytrack.client.model.State;
-import lombok.Data;
 
-@Data
 @JsonTypeName("cve-of-purl")
 public class SuppressCveOfPurl implements Suppression {
 
-	private String type = "cve-of-purl";
+	private final String type = "cve-of-purl";
 
 	private String notes;
-	private State state = State.NOT_SET;
-	private AnalysisJustification justification = AnalysisJustification.NOT_SET;
-	private AnalysisResponse response = AnalysisResponse.NOT_SET;
-	private LocalDate expiration = LocalDate.MAX;
+	private final State state = State.NOT_SET;
+	private final AnalysisJustification justification = AnalysisJustification.NOT_SET;
+	private final AnalysisResponse response = AnalysisResponse.NOT_SET;
+	private final LocalDate expiration = LocalDate.MAX;
 	private String purl;
 	private String cve;
 
-	private boolean regex = false;
+	private final boolean regex = false;
+
+	@Override
+	public String getType() {
+		return type;
+	}
+
+	@Override
+	public String getNotes() {
+		return notes;
+	}
+
+	@Override
+	public State getState() {
+		return state;
+	}
+
+	@Override
+	public AnalysisJustification getJustification() {
+		return justification;
+	}
+
+	@Override
+	public AnalysisResponse getResponse() {
+		return response;
+	}
+
+	@Override
+	public LocalDate getExpiration() {
+		return expiration;
+	}
 
 	@Override
 	public boolean suppressesFinding(Finding finding) {

@@ -156,7 +156,7 @@ public class SecurityGate {
 			}
 		}
 
-		public void generateEffectiveSuppressionsFile(Log log, String suppressionsFile) throws MojoExecutionException {
+		public void cleanupSuppressionsFile(Log log, String suppressionsFile) throws MojoExecutionException {
 			try {
 				Path targetSuppressionsFilePath = Paths.get(suppressionsFile);
 				Files.createDirectories(targetSuppressionsFilePath.getParent());

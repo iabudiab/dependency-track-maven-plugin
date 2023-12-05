@@ -101,14 +101,14 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	/**
 	 * Whether suppressions file should be created from effective suppressions.
 	 */
-	@Parameter(property = "generateSuppressions", defaultValue = "true", required = false)
-	protected boolean generateSuppressions;
+	@Parameter(property = "cleanupSuppressions", defaultValue = "true", required = false)
+	protected boolean cleanupSuppressions;
 
 	/**
 	 * Suppressions file path containing effective suppressions.
 	 */
-	@Parameter(defaultValue = "${project.build.directory}/dependency-track/suppressions.json", property = "generateSuppressionsFile", required = false)
-	private String generateSuppressionsFile;
+	@Parameter(defaultValue = "${project.build.directory}/dependency-track/suppressions.json", property = "cleanupSuppressionsFile", required = false)
+	private String cleanupSuppressionsFile;
 
 
 	@Override
@@ -206,8 +206,8 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 		SecurityGate.SecurityReport securityReport = securityGate.applyOn(findings, suppressions);
 		securityReport.execute(getLog());
-		if (generateSuppressions) {
-			securityReport.generateEffectiveSuppressionsFile(getLog(), generateSuppressionsFile);
+		if (cleanupSuppressions) {
+			securityReport.cleanupSuppressionsFile(getLog(), cleanupSuppressionsFile);
 		}
 	}
 
