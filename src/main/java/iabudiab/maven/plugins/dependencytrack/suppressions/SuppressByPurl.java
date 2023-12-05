@@ -25,7 +25,7 @@ public class SuppressByPurl implements Suppression {
 	private LocalDate expiration = LocalDate.MAX;
 	private String purl;
 
-	private final boolean regex = false;
+	private boolean regex = false;
 
 	@Override
 	public boolean suppressesFinding(Finding finding) {
