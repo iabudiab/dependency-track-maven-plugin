@@ -11,7 +11,7 @@ import iabudiab.maven.plugins.dependencytrack.client.model.State;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "by", visible = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "by", include = JsonTypeInfo.As.EXISTING_PROPERTY, visible = true)
 @JsonSubTypes({
 	@JsonSubTypes.Type(value = SuppressByPurl.class, name = "purl"),
 	@JsonSubTypes.Type(value = SuppressCve.class, name = "cve"),
@@ -48,4 +48,6 @@ public interface Suppression {
 	}
 
 	CharSequence print();
+
+	CharSequence printIdentifier();
 }

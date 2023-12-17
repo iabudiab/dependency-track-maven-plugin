@@ -49,7 +49,12 @@ public class SuppressByPurl implements Suppression {
 		}
 
 		builder.append("[").append(purl).append("]");
-		builder.append(" [expired: ").append(isExpired() ? "yes": "no").append("]");
+		builder.append(" [expired: ").append(isExpired() ? "yes" : "no").append("]");
 		return builder.toString();
+	}
+
+	@Override
+	public CharSequence printIdentifier() {
+		return "[" + purl + "]";
 	}
 }

@@ -36,4 +36,9 @@ public class SuppressCve implements Suppression {
 		builder.append(" [expired: ").append(isExpired() ? "yes": "no").append("]");
 		return builder.toString();
 	}
+
+	@Override
+	public CharSequence printIdentifier() {
+		return "[" + cve + "]";
+	}
 }

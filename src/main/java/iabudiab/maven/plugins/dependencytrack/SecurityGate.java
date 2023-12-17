@@ -3,10 +3,21 @@ package iabudiab.maven.plugins.dependencytrack;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
 import iabudiab.maven.plugins.dependencytrack.client.model.Severity;
@@ -14,7 +25,6 @@ import iabudiab.maven.plugins.dependencytrack.suppressions.Suppression;
 import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.apache.maven.plugin.logging.Log;
 
 @Data
 public class SecurityGate {
@@ -56,9 +66,14 @@ public class SecurityGate {
 		reportBuilder.append("\n");
 
 		List<Finding> effectiveFindings = new ArrayList<>();
+		List<Suppression> remainingSuppression = new ArrayList<>(suppressions.getSuppressions());
+
 
 		for (Finding finding : findings) {
+			Suppression suppression = suppressions.hasSuppression(finding);
+
 			if (finding.getAnalysis().isSuppressed()) {
+				remainingSuppression.remove(suppression);
 				reportBuilder.append("- Finding is already suppressed in Dependency-Track for: [").append(finding.getComponent().getPurl()).append("]");
 				reportBuilder.append(" [cve: ").append(finding.getVulnerability().getVulnId()).append("]");
 				reportBuilder.append(" [severity: ").append(finding.getVulnerability().getSeverity()).append("]");
@@ -66,7 +81,6 @@ public class SecurityGate {
 				continue;
 			}
 
-			Suppression suppression = suppressions.hasSuppression(finding);
 			if (suppression == null) {
 				reportBuilder.append("- Active finding for: [").append(finding.getComponent().getPurl()).append("]");
 				reportBuilder.append(" [cve: ").append(finding.getVulnerability().getVulnId()).append("]");
@@ -76,6 +90,7 @@ public class SecurityGate {
 				continue;
 			}
 
+			remainingSuppression.remove(suppression);
 			if (suppression.isExpired()) {
 				reportBuilder.append("- Active finding with expired custom suppression for: [").append(finding.getComponent().getPurl()).append("]");
 				effectiveFindings.add(finding);
@@ -96,7 +111,13 @@ public class SecurityGate {
 			reportBuilder.append("\n");
 		}
 
-		return new SecurityReport(true, reportBuilder.toString(), effectiveFindings);
+		for (Suppression suppression : remainingSuppression) {
+			reportBuilder.append("- Unnecessary suppression for: ").append(suppression.printIdentifier()).append("\n");
+		}
+
+		List<Suppression> effectiveSuppressions = new ArrayList<>(suppressions.getSuppressions());
+		effectiveSuppressions.removeAll(remainingSuppression);
+		return new SecurityReport(true, reportBuilder.toString(), effectiveFindings, effectiveSuppressions);
 	}
 
 	public CharSequence printThresholds() {
@@ -120,6 +141,7 @@ public class SecurityGate {
 		private boolean passed;
 		private String report;
 		private List<Finding> effectiveFindings;
+		private List<Suppression> effectiveSuppressions;
 
 		public void fail() {
 			passed = false;
@@ -131,6 +153,31 @@ public class SecurityGate {
 			if (!isPassed()) {
 				log.warn("Project did not pass the Security Gate");
 				throw new SecurityGateRejectionException("Project did not pass the Security Gate");
+			}
+		}
+
+		public void cleanupSuppressionsFile(Log log, String suppressionsFile) throws MojoExecutionException {
+			try {
+				Path targetSuppressionsFilePath = Paths.get(suppressionsFile);
+				Files.createDirectories(targetSuppressionsFilePath.getParent());
+
+
+				ObjectMapper objectMapper = new ObjectMapper();
+				objectMapper.registerModule(new JavaTimeModule());
+
+				byte[] filteredSuppressionsBytes =
+						objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(new Suppressions(effectiveSuppressions));
+
+				Files.write(
+						targetSuppressionsFilePath,
+						filteredSuppressionsBytes,
+						StandardOpenOption.CREATE,
+						StandardOpenOption.TRUNCATE_EXISTING,
+						StandardOpenOption.WRITE
+				);
+				log.info("Effective suppressions have been written to: " + targetSuppressionsFilePath);
+			} catch (IOException e) {
+				throw new MojoExecutionException("Error writing suppressions: ", e);
 			}
 		}
 	}
