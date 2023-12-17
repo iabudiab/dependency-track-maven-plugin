@@ -53,7 +53,7 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>8</java.version>
 		<maven.plugin.version>3.6.0</maven.plugin.version>
-		<jackson-version>2.13.4</jackson-version>
+		<jackson-version>2.13.4.2</jackson-version>
 		<lombok.version>1.18.12</lombok.version>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
