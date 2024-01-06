@@ -38,21 +38,8 @@ public class UploadScanMojo extends AbstractDependencyTrackMojo {
 	private String artifactName;
 
 	@Override
-	protected void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException {
+	protected void doWork(DTrack dtrack) throws DTrackException {
 		Path path = Paths.get(artifactDirectory.getPath(), artifactName);
-		String encodeArtifact = Utils.loadAndEncodeArtifactFile(path);
-
-		ScanSubmitRequest payload = ScanSubmitRequest.builder() //
-				.projectName(projectName) //
-				.projectVersion(projectVersion) //
-				.scan(encodeArtifact) //
-				.autoCreate(true) //
-				.build();
-
-		try {
-			client.uploadScan(payload);
-		} catch (IOException e) {
-			throw new MojoExecutionException("Error uploading scan: ", e);
-		}
+		dtrack.uploadScan(path);
 	}
 }

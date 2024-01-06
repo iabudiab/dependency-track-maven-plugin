@@ -90,6 +90,7 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		logConfiguration();
 		logGoalConfiguration();
+
 		if(skip) {
 			getLog().info("skip is '"+ skip +"' so skipping plugin execution.");
 			return;
@@ -100,10 +101,12 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 			client.setLogPayloads(logPayloads);
 
 			Suppressions suppressions = loadSuppressions();
-			doWork(client, suppressions);
+			DTrack dtrack = new DTrack(client, suppressions, projectName, projectVersion);
+
+			doWork(dtrack);
 		} catch (URISyntaxException e) {
 			throw new MojoExecutionException("Error during plugin execution", e);
-		} catch (MojoFailureException e) {
+		} catch (DTrackException | MojoExecutionException e) {
 			handleFailureException(e);
 		}
 	}
@@ -126,9 +129,9 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 		}
 	}
 
-	private void handleFailureException(MojoFailureException e) throws MojoFailureException {
+	private void handleFailureException(Exception e) throws MojoFailureException {
 		if (failOnError) {
-			throw e;
+			throw new MojoFailureException(e.getMessage(), e);
 		} else {
 			if (getLog().isDebugEnabled()) {
 				getLog().debug(e);
@@ -142,7 +145,7 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 		// NOOP
 	}
 
-	protected abstract void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException, MojoFailureException;
+	protected abstract void doWork(DTrack dtrack) throws DTrackException, MojoExecutionException;
 
 	private void logConfiguration() {
 		getLog().info("DependencyTrack Maven Plugin");

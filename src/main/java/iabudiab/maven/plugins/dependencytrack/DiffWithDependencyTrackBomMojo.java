@@ -55,7 +55,7 @@ public class DiffWithDependencyTrackBomMojo extends AbstractDependencyTrackMojo 
 	}
 
 	@Override
-	protected void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException, MojoFailureException {
+	protected void doWork(DTrack dtrack) throws DTrackException {
 		Bom localBom = BomUtils.readBomAtPath(Paths.get(localBomPath));
 		Bom remoteBom = loadRemoteBom(client);
 

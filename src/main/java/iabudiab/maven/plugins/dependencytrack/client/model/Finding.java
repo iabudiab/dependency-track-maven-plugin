@@ -14,5 +14,4 @@ public class Finding {
 	private Analysis analysis;
 
 	private String matrix;
-
 }

@@ -25,7 +25,7 @@ public class Suppressions {
 			.anyMatch(suppression -> suppression.shouldSuppress(finding));
 	}
 
-	public Suppression hasSuppression(Finding finding) {
+	public Suppression suppressionFor(Finding finding) {
 		for (Suppression suppression : suppressions) {
 			if (suppression.suppressesFinding(finding)) {
 				return suppression;
@@ -34,7 +34,7 @@ public class Suppressions {
 		return null;
 	}
 
-	public CharSequence printSummary() {
+	public CharSequence print() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("--- Custom Suppressions ---");
 		builder.append("\n");

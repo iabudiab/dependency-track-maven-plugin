@@ -1,6 +1,5 @@
 package iabudiab.maven.plugins.dependencytrack;
 
-import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
 import iabudiab.maven.plugins.dependencytrack.client.model.*;
 import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -15,10 +14,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Mojo for checking a pending token for processing status and applying
@@ -60,7 +55,7 @@ public class CheckPendingTokenMojo extends AbstractDependencyTrackMojo {
 	 * Dependency-Track, which would fail the build if not met.
 	 */
 	@Parameter(property = "securityGate", required = false)
-	private SecurityGate securityGate = SecurityGate.strict();
+	private FindingsThresholdSecurityGate securityGate = FindingsThresholdSecurityGate.strict();
 
 	@Override
 	protected void logGoalConfiguration() {
@@ -70,49 +65,31 @@ public class CheckPendingTokenMojo extends AbstractDependencyTrackMojo {
 	}
 
 	@Override
-	protected void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException, SecurityGateRejectionException {
-		Project project;
-		try {
-			project = client.getProject(projectName, projectVersion);
-		} catch (IOException e) {
-			throw new MojoExecutionException("Error loading project: ", e);
-		}
-
+	protected void doWork(DTrack dtrack) throws DTrackException, MojoExecutionException {
 		try {
 			UUID token = loadToken();
-			boolean isProcessingToken = client
-					.pollTokenProcessing(token, ForkJoinPool.commonPool()) //
-					.get(tokenPollingDuration, TimeUnit.SECONDS);
+			boolean isProcessingToken = dtrack.pollToken(token, tokenPollingDuration);
+
 			if (isProcessingToken) {
 				getLog().info("Timeout while waiting for BOM token, bailing out.");
 				return;
 			}
-		} catch (TimeoutException| IOException | InterruptedException | ExecutionException e) {
-			Thread.currentThread().interrupt();
-			throw new MojoExecutionException("Error processing project findings: ", e);
-		}
-
-		List<Finding> findings;
-		try {
-			findings = client.getProjectFindings(project.getUuid());
-			FindingsReport findingsReport = new FindingsReport(findings);
-			getLog().info(findingsReport.printSummary());
 		} catch (IOException e) {
-			throw new MojoExecutionException("Error processing project findings: ", e);
+			throw new MojoExecutionException("Error loading token: ", e);
 		}
 
-		ProjectMetrics projectMetrics;
-		try {
-			projectMetrics = client.getProjectMetrics(project.getUuid());
-		} catch (IOException e) {
-			throw new MojoExecutionException("Error fetching project metrics: ", e);
-		}
+		List<Finding> findings  = dtrack.loadFindings();
+		FindingsReport findingsReport = new FindingsReport(findings);
+		getLog().info(findingsReport.print());
 
-		getLog().info(projectMetrics.printMetrics());
-		getLog().info(securityGate.printThresholds());
-		getLog().info(suppressions.printSummary());
+		ProjectMetrics projectMetrics = dtrack.loadProjectMetrics();
+		getLog().info(projectMetrics.print());
 
-		SecurityGate.SecurityReport securityReport = securityGate.applyOn(findings, suppressions);
+		Suppressions suppressions = dtrack.getSuppressions();
+		getLog().info(securityGate.print());
+		getLog().info(suppressions.print());
+
+		SecurityReport securityReport = securityGate.applyOn(findings, suppressions);
 		securityReport.execute(getLog());
 	}
 
@@ -127,7 +104,7 @@ public class CheckPendingTokenMojo extends AbstractDependencyTrackMojo {
 			token = UUID.fromString(tokenString);
 		}
 
-		if (tokenValue != null && !tokenValue.equals("")) {
+		if (tokenValue != null && !tokenValue.isEmpty()) {
 			getLog().info("Using provided tokenValue: " + tokenValue);
 			token = UUID.fromString(tokenValue);
 		}

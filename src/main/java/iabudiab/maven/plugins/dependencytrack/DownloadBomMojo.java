@@ -49,16 +49,15 @@ public class DownloadBomMojo extends AbstractDependencyTrackMojo {
 	}
 
 	@Override
-	protected void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException {
+	protected void doWork(DTrack dtrack) throws MojoExecutionException {
 		validateArguments();
 
-		Path path = Paths.get(destinationPath);
 		try {
-			Project project = client.getProject(projectName, projectVersion);
-			client.downloadBom(project.getUuid(), path, outputFormat);
-		} catch (HttpResponseException e) {
+			Path path = Paths.get(destinationPath);
+			dtrack.downloadBom(path, outputFormat);
+		} catch (DTrackNotFoundException e) {
 			handleProjectNotFound(e);
-		} catch (IOException e) {
+		} catch (DTrackException e) {
 			throw new MojoExecutionException("Error downloading bom: ", e);
 		}
 	}
@@ -73,15 +72,11 @@ public class DownloadBomMojo extends AbstractDependencyTrackMojo {
 		}
 	}
 
-	private void handleProjectNotFound(HttpResponseException e) throws MojoExecutionException {
-		if (e.getStatusCode() == 404) {
-			if (failedOnNotFound) {
-				throw new MojoExecutionException("Project not found: ", e);
-			} else {
-				getLog().info("failedOnNotFound=false, ignoring project not found: " + projectName + "-" + projectVersion);
-			}
+	private void handleProjectNotFound(DTrackNotFoundException e) throws MojoExecutionException {
+		if (failedOnNotFound) {
+			throw new MojoExecutionException("Project not found: ", e);
 		} else {
-			throw new MojoExecutionException("Error downloading bom: ", e);
+			getLog().info("failedOnNotFound=false, ignoring project not found: " + projectName + "-" + projectVersion);
 		}
 	}
 }

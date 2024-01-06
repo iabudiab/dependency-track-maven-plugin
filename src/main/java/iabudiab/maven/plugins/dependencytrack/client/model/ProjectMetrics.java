@@ -36,19 +36,4 @@ public class ProjectMetrics {
 	private long firstOccurrence;
 
 	private long lastOccurrence;
-
-	public CharSequence printMetrics() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("--- Project Metrics ---");
-		builder.append("\n");
-		builder.append("critical: ");
-		builder.append(critical);
-		builder.append(", high: ");
-		builder.append(high);
-		builder.append(", medium: ");
-		builder.append(medium);
-		builder.append(", low: ");
-		builder.append(low);
-		return builder.toString();
-	}
 }

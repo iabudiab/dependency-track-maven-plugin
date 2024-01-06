@@ -8,20 +8,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import iabudiab.maven.plugins.dependencytrack.client.model.*;
+import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-
-import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
-import iabudiab.maven.plugins.dependencytrack.suppressions.Suppression;
-import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 
 /**
  * Mojo for uploading a <a href="https://cyclonedx.org">CycloneDX</a> SBOM to
@@ -84,7 +77,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	 * Dependency-Track, which would fail the build if not met.
 	 */
 	@Parameter(property = "securityGate", required = false)
-	private SecurityGate securityGate = SecurityGate.strict();
+	private FindingsThresholdSecurityGate securityGate = FindingsThresholdSecurityGate.strict();
 
 	/**
 	 * Whether matching local suppressions for actual findings should be applied remotely in dependency track.
@@ -123,32 +116,15 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	}
 
 	@Override
-	protected void doWork(DTrackClient client, Suppressions suppressions) throws MojoExecutionException, SecurityGateRejectionException {
+	protected void doWork(DTrack dtrack) throws DTrackException, MojoExecutionException {
 		Path path = Paths.get(artifactDirectory.getPath(), artifactName);
-		String encodeArtifact = Utils.loadAndEncodeArtifactFile(path);
 
-		BomSubmitRequest payload = BomSubmitRequest.builder() //
-			.projectName(projectName) //
-			.projectVersion(projectVersion) //
-			.bom(encodeArtifact) //
-			.autoCreate(true) //
-			.build();
-
-		TokenResponse tokenResponse;
-		try {
-			tokenResponse = client.uploadBom(payload);
-		} catch (IOException e) {
-			throw new MojoExecutionException("Error uploading bom: ", e);
-		}
+		TokenResponse tokenResponse = dtrack.uploadBom(path);
 
 		try {
 			Path tokenFilePath = Paths.get(tokenFile);
-			Files.createDirectories(tokenFilePath.getParent());
-			byte[] tokenBytes = tokenResponse.getToken().toString().getBytes(StandardCharsets.UTF_8);
-
-			Files.write(tokenFilePath, tokenBytes,
-				StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
-			getLog().info("Token has been written to: " + tokenFilePath.toString());
+			writeToPath(tokenResponse, tokenFilePath);
+			getLog().info("Token has been written to: " + tokenFilePath);
 		} catch (IOException e) {
 			throw new MojoExecutionException("Error writing token: ", e);
 		}
@@ -158,93 +134,43 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			return;
 		}
 
-		Project project;
-		try {
-			project = client.getProject(projectName, projectVersion);
-		} catch (IOException e) {
-			throw new MojoExecutionException("Error loading project: ", e);
+		boolean stillProcessingToken = dtrack.pollToken(tokenResponse.getToken(), tokenPollingDuration);
+
+		if (stillProcessingToken) {
+			getLog().info("Timeout while waiting for BOM token, bailing out.");
+			return;
 		}
 
-		try {
-			boolean isProcessingToken = client
-				.pollTokenProcessing(tokenResponse.getToken(), ForkJoinPool.commonPool()) //
-				.get(tokenPollingDuration, TimeUnit.SECONDS);
+		List<Finding> findings = dtrack.loadFindings();
+		FindingsReport findingsReport = new FindingsReport(findings);
+		getLog().info(InfoPrinter.print(findingsReport));
 
-			if (isProcessingToken) {
-				getLog().info("Timeout while waiting for BOM token, bailing out.");
-				return;
-			}
-		} catch (TimeoutException | InterruptedException | ExecutionException e) {
-			Thread.currentThread().interrupt();
-			throw new MojoExecutionException("Error processing project findings: ", e);
-		}
+		ProjectMetrics projectMetrics = dtrack.loadProjectMetrics(projectMetricsRetryDelay, projectMetricsRetryLimit);
+		getLog().info(InfoPrinter.print(projectMetrics));
 
-		List<Finding> findings;
-		try {
-			findings = client.getProjectFindings(project.getUuid());
-			FindingsReport findingsReport = new FindingsReport(findings);
-			getLog().info(findingsReport.printSummary());
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		Suppressions suppressions = dtrack.getSuppressions();
+		getLog().info(securityGate.print());
+		getLog().info(suppressions.print());
 
-		ProjectMetrics projectMetrics = null;
-		try {
-			projectMetrics = client.getProjectMetrics(project.getUuid(), projectMetricsRetryDelay, projectMetricsRetryLimit);
-		} catch(Exception e) {
-			throw new MojoExecutionException("Error fetching project metrics", e);
-		}
-		if(projectMetrics == null) {
-			throw new MojoExecutionException("could not retrieve project metrics after '"+ projectMetricsRetryLimit +"' retries!");
-		}
-
-		getLog().info(projectMetrics.printMetrics());
-		getLog().info(securityGate.printThresholds());
-		getLog().info(suppressions.printSummary());
-
-		uploadSuppressions(client, suppressions, project, findings);
-
-		SecurityGate.SecurityReport securityReport = securityGate.applyOn(findings, suppressions);
-		securityReport.execute(getLog());
-		if (cleanupSuppressions) {
-			securityReport.cleanupSuppressionsFile(getLog(), cleanupSuppressionsFile);
-		}
-	}
-
-	private void uploadSuppressions(DTrackClient client, Suppressions suppressions, Project project, List<Finding> findings) throws MojoExecutionException {
 		if (findings == null || !uploadMatchingSuppressions) {
 			getLog().info("Skip checking for matching suppressions to be uploaded");
 			return;
 		}
 
-		for (Finding finding : findings) {
-			Suppression suppression = suppressions.hasSuppression(finding);
-			if (suppression == null) {
-				continue;
-			}
+		dtrack.applySuppressions(resetExpiredSuppressions);
 
-			Analysis analysis = new Analysis();
-			analysis.setProjectUuid(project.getUuid());
-			analysis.setComponentUuid(finding.getComponent().getUuid());
-			analysis.setVulnerabilityUuid(finding.getVulnerability().getUuid());
-			analysis.setSuppressed(true);
-			analysis.setComment(suppression.getNotes());
-			analysis.setState(suppression.getState());
-			analysis.setJustification(suppression.getJustification());
-			analysis.setResponse(suppression.getResponse());
+		SecurityReport securityReport = securityGate.applyOn(findings, suppressions);
+		securityReport.execute(getLog());
 
-			if (resetExpiredSuppressions && suppression.isExpired()) {
-				analysis.setSuppressed(false);
-				analysis.setState(State.NOT_SET);
-				analysis.setJustification(AnalysisJustification.NOT_SET);
-				analysis.setResponse(AnalysisResponse.NOT_SET);
-			}
-
-			try {
-				client.uploadAnalysis(analysis);
-			} catch (IOException e) {
-				throw new MojoExecutionException("Error uploading suppression analysis: ", e);
-			}
+		if (cleanupSuppressions) {
+			securityReport.cleanupSuppressionsFile(getLog(), cleanupSuppressionsFile);
 		}
+	}
+
+	private void writeToPath(TokenResponse token, Path path) throws IOException {
+		Files.createDirectories(path.getParent());
+		byte[] tokenBytes = token.toString().getBytes(StandardCharsets.UTF_8);
+		Files.write(path, tokenBytes,
+			StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
 	}
 }

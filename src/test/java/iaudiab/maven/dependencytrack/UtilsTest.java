@@ -13,8 +13,6 @@ import org.apache.maven.plugin.logging.Log;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import iabudiab.maven.plugins.dependencytrack.Utils;
-
 public class UtilsTest {
 
 

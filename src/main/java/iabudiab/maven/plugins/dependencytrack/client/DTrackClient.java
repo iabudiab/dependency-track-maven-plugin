@@ -6,16 +6,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import iabudiab.maven.plugins.dependencytrack.BomFormat;
+import iabudiab.maven.plugins.dependencytrack.client.model.*;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
@@ -35,19 +35,6 @@ import org.apache.http.util.EntityUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.io.InputStreamFacade;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import iabudiab.maven.plugins.dependencytrack.BomFormat;
-import iabudiab.maven.plugins.dependencytrack.Utils;
-import iabudiab.maven.plugins.dependencytrack.client.model.Analysis;
-import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
-import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
-import iabudiab.maven.plugins.dependencytrack.client.model.Project;
-import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
-import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
-import iabudiab.maven.plugins.dependencytrack.client.model.TokenProcessedResponse;
-import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
 
 public class DTrackClient {
 
@@ -81,16 +68,16 @@ public class DTrackClient {
 		this.logPayloads = false;
 
 		RequestConfig config = RequestConfig.custom() //
-				.setConnectTimeout(DEFAULT_TIMEOUT * 1000) //
-				.setConnectionRequestTimeout(DEFAULT_TIMEOUT * 1000) //
-				.setSocketTimeout(DEFAULT_TIMEOUT * 1000) //
-				.build();
+			.setConnectTimeout(DEFAULT_TIMEOUT * 1000) //
+			.setConnectionRequestTimeout(DEFAULT_TIMEOUT * 1000) //
+			.setSocketTimeout(DEFAULT_TIMEOUT * 1000) //
+			.build();
 
 		this.client = HttpClients.custom() //
-				.setDefaultRequestConfig(config) //
-				.setDefaultHeaders(apiHeaders()) //
-				.setRedirectStrategy(new LaxRedirectStrategy()) //
-				.build();
+			.setDefaultRequestConfig(config) //
+			.setDefaultHeaders(apiHeaders()) //
+			.setRedirectStrategy(new LaxRedirectStrategy()) //
+			.build();
 		log.info("Using API v1 at: " + baseUri);
 	}
 
@@ -160,18 +147,18 @@ public class DTrackClient {
 		};
 
 		return CompletableFuture.supplyAsync(checkToken, executor) //
-				.thenCompose(isProcessing -> {
-					if (isProcessing) {
-						try {
-							log.info("Token is still being processed, will retry in 5 seconds");
-							return pollTokenProcessing(token,
-									CompletableFutureBackports.delayedExecutor(5, TimeUnit.SECONDS));
-						} catch (Exception e) {
-							throw new CompletionException("Error during token polling", e);
-						}
+			.thenCompose(isProcessing -> {
+				if (isProcessing) {
+					try {
+						log.info("Token is still being processed, will retry in 5 seconds");
+						return pollTokenProcessing(token,
+							CompletableFutureUtils.delayedExecutor(5, TimeUnit.SECONDS));
+					} catch (Exception e) {
+						throw new CompletionException("Error during token polling", e);
 					}
-					return CompletableFuture.completedFuture(isProcessing);
-				});
+				}
+				return CompletableFuture.completedFuture(isProcessing);
+			});
 	}
 
 	public Project getProject(String name) throws IOException {
@@ -195,20 +182,20 @@ public class DTrackClient {
 	}
 
 	public ProjectMetrics getProjectMetrics(UUID projectId, int retryDelay, int retryLimit) throws IOException {
-		if(retryLimit <= 0) return getProjectMetrics(projectId);
-		if(retryDelay < 0) throw new IllegalArgumentException("project metrics retry delay must be >= 0");
+		if (retryLimit <= 0) return getProjectMetrics(projectId);
+		if (retryDelay < 0) throw new IllegalArgumentException("Project metrics retry delay must be >= 0");
 
 		Supplier<ProjectMetrics> projectMetricsSupplier = () -> {
 			ProjectMetrics metrics = null;
 			try {
 				metrics = getProjectMetrics(projectId);
-			} catch(Exception ex) {
-				log.warn("got exception while obtaining project metrics for project '"+ projectId +"'", ex);
+			} catch (Exception ex) {
+				log.warn("Got exception while obtaining project metrics for project '" + projectId + "'", ex);
 				return null;
 			}
 			return metrics;
 		};
-		return Utils.retry(projectMetricsSupplier, metric -> metric == null, retryDelay, 0, retryLimit, log).join();
+		return CompletableFutureUtils.retry(projectMetricsSupplier, Objects::isNull, retryDelay, 0, retryLimit, log).join();
 	}
 
 	public ProjectMetrics getProjectMetrics(UUID projectId) throws IOException {
@@ -271,22 +258,22 @@ public class DTrackClient {
 
 	private void logResponseCode(int statusCode) {
 		switch (statusCode) {
-		case 200:
-			log.debug("Request successful");
-			break;
-		case 400:
-			log.error("Bad request. Probably an error in the plugin itself.");
-			break;
-		case 401:
-			log.error("Unauthenticated. Check your API Key");
-			break;
-		case 403:
-			log.error("Unauthorized. Check the permissions of the provided API Key. "
+			case 200:
+				log.debug("Request successful");
+				break;
+			case 400:
+				log.error("Bad request. Probably an error in the plugin itself.");
+				break;
+			case 401:
+				log.error("Unauthenticated. Check your API Key");
+				break;
+			case 403:
+				log.error("Unauthorized. Check the permissions of the provided API Key. "
 					+ "Required are: SCAN_UPLOAD and either PROJECT_CREATION_UPLOAD or PORTFOLIO_MANAGEMENT");
-			break;
-		default:
-			log.warn("Received status code: " + statusCode);
-			break;
+				break;
+			default:
+				log.warn("Received status code: " + statusCode);
+				break;
 		}
 	}
 
