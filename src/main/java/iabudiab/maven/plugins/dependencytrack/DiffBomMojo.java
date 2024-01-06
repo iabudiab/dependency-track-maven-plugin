@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import iabudiab.maven.plugins.dependencytrack.cyclone.BomUtils;
 import iabudiab.maven.plugins.dependencytrack.cyclone.DiffResult;
 import iabudiab.maven.plugins.dependencytrack.cyclone.DiffResultsWriter;
+import iabudiab.maven.plugins.dependencytrack.cyclone.OutputFormat;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;

@@ -1,6 +1,7 @@
 package iabudiab.maven.plugins.dependencytrack;
 
 import iabudiab.maven.plugins.dependencytrack.client.model.*;
+import iabudiab.maven.plugins.dependencytrack.dtrack.*;
 import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;

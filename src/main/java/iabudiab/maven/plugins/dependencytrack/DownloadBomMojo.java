@@ -1,13 +1,12 @@
 package iabudiab.maven.plugins.dependencytrack;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
-import iabudiab.maven.plugins.dependencytrack.client.model.Project;
-import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
-import org.apache.http.client.HttpResponseException;
+import iabudiab.maven.plugins.dependencytrack.cyclone.BomFormat;
+import iabudiab.maven.plugins.dependencytrack.dtrack.DTrack;
+import iabudiab.maven.plugins.dependencytrack.dtrack.DTrackException;
+import iabudiab.maven.plugins.dependencytrack.dtrack.DTrackNotFoundException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;

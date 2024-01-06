@@ -8,6 +8,8 @@ import java.nio.file.Paths;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import iabudiab.maven.plugins.dependencytrack.dtrack.DTrack;
+import iabudiab.maven.plugins.dependencytrack.dtrack.DTrackException;
 import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;

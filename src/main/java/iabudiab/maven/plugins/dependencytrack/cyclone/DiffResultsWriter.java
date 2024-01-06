@@ -1,8 +1,5 @@
 package iabudiab.maven.plugins.dependencytrack.cyclone;
 
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,7 +8,6 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import iabudiab.maven.plugins.dependencytrack.OutputFormat;
 import lombok.AllArgsConstructor;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;

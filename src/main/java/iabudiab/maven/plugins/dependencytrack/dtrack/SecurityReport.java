@@ -1,4 +1,4 @@
-package iabudiab.maven.plugins.dependencytrack;
+package iabudiab.maven.plugins.dependencytrack.dtrack;
 
 import java.io.IOException;
 import java.nio.file.Files;

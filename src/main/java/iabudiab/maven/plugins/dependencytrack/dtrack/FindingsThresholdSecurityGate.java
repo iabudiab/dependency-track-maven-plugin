@@ -1,4 +1,4 @@
-package iabudiab.maven.plugins.dependencytrack;
+package iabudiab.maven.plugins.dependencytrack.dtrack;
 
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;

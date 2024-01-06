@@ -1,18 +1,14 @@
 package iabudiab.maven.plugins.dependencytrack;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
-import org.apache.maven.plugin.MojoExecutionException;
+import iabudiab.maven.plugins.dependencytrack.dtrack.DTrack;
+import iabudiab.maven.plugins.dependencytrack.dtrack.DTrackException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-
-import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
-import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
 
 /**
  * Mojo for uploading a

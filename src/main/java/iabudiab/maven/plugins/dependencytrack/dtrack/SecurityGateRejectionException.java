@@ -1,6 +1,4 @@
-package iabudiab.maven.plugins.dependencytrack;
-
-import org.apache.maven.plugin.MojoFailureException;
+package iabudiab.maven.plugins.dependencytrack.dtrack;
 
 public class SecurityGateRejectionException extends DTrackException {
 

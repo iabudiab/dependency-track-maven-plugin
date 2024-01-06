@@ -7,14 +7,12 @@ import java.util.ArrayList;
 
 import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
 import iabudiab.maven.plugins.dependencytrack.client.model.Project;
-import iabudiab.maven.plugins.dependencytrack.cyclone.BomUtils;
-import iabudiab.maven.plugins.dependencytrack.cyclone.DiffResult;
-import iabudiab.maven.plugins.dependencytrack.cyclone.DiffResultsWriter;
-import iabudiab.maven.plugins.dependencytrack.cyclone.DiffUtils;
-import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
+import iabudiab.maven.plugins.dependencytrack.cyclone.*;
+import iabudiab.maven.plugins.dependencytrack.dtrack.DTrack;
+import iabudiab.maven.plugins.dependencytrack.dtrack.DTrackException;
+import iabudiab.maven.plugins.dependencytrack.dtrack.DTrackNotFoundException;
 import org.apache.http.client.HttpResponseException;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -55,37 +53,26 @@ public class DiffWithDependencyTrackBomMojo extends AbstractDependencyTrackMojo 
 	}
 
 	@Override
-	protected void doWork(DTrack dtrack) throws DTrackException {
+	protected void doWork(DTrack dtrack) throws MojoExecutionException {
 		Bom localBom = BomUtils.readBomAtPath(Paths.get(localBomPath));
-		Bom remoteBom = loadRemoteBom(client);
+		Bom remoteBom = loadRemoteBom(dtrack);
 
 		computeDiffAndReport(remoteBom, localBom);
 	}
 
-	private Bom loadRemoteBom(DTrackClient client) throws MojoExecutionException {
-		Project project;
-		try {
-			project = client.getProject(projectName, projectVersion);
-		} catch (HttpResponseException e) {
-			if (e.getStatusCode() == 404) {
-				Bom emptyBom = new Bom();
-				emptyBom.setComponents(new ArrayList<>());
-				return emptyBom;
-			} else {
-				throw new MojoExecutionException("Error loading project: ", e);
-			}
-		} catch (IOException e) {
-			throw new MojoExecutionException("Error loading project: ", e);
-		}
-
+	private Bom loadRemoteBom(DTrack dtrack) throws MojoExecutionException {
 		Path localPath = Paths.get(localBomPath);
 		Path downloadDestination = localPath.resolveSibling("remote-" + localPath.getFileName());
 		BomFormat format = BomUtils.probeFormat(localPath);
 
 		try {
-			client.downloadBom(project.getUuid(), downloadDestination, format);
-		} catch (IOException e) {
-			throw new MojoExecutionException("Error downloading bom: ", e);
+			dtrack.downloadBom(downloadDestination, format);
+		} catch (DTrackNotFoundException e) {
+			Bom emptyBom = new Bom();
+			emptyBom.setComponents(new ArrayList<>());
+			return emptyBom;
+		} catch (DTrackException e) {
+			throw new MojoExecutionException("Error downloading BOM: ", e);
 		}
 
 		return BomUtils.readBomAtPath(downloadDestination);

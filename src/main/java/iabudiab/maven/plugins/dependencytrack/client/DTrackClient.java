@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import iabudiab.maven.plugins.dependencytrack.BomFormat;
+import iabudiab.maven.plugins.dependencytrack.cyclone.BomFormat;
 import iabudiab.maven.plugins.dependencytrack.client.model.*;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
