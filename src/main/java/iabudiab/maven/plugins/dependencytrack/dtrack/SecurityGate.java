@@ -7,5 +7,5 @@ import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 
 public interface SecurityGate {
 
-	SecurityReport applyOn(List<Finding> findings, Suppressions suppressions);
+	SecurityGateDecision checkAgainst(List<Finding> findings, Suppressions suppressions);
 }

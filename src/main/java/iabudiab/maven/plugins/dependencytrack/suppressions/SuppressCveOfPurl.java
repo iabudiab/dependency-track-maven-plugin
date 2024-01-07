@@ -51,9 +51,9 @@ public class SuppressCveOfPurl implements Suppression {
 
 		builder.append(" of PURL");
 		if (regex) {
-			builder.append(" [exact match]: ");
-		} else {
 			builder.append(" [as regex]: ");
+		} else {
+			builder.append(" [exact match]: ");
 		}
 
 		builder.append("[").append(purl).append("]");

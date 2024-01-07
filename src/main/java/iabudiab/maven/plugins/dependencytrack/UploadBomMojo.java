@@ -160,11 +160,11 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 		dtrack.applySuppressions(resetExpiredSuppressions);
 
-		SecurityReport securityReport = securityGate.applyOn(findings, suppressions);
-		securityReport.execute(getLog());
+		SecurityGateDecision decision = securityGate.checkAgainst(findings, suppressions);
+		decision.execute(getLog());
 
 		if (cleanupSuppressions) {
-			securityReport.cleanupSuppressionsFile(getLog(), cleanupSuppressionsFile);
+			decision.getReport().cleanupSuppressionsFile(getLog(), cleanupSuppressionsFile);
 		}
 	}
 

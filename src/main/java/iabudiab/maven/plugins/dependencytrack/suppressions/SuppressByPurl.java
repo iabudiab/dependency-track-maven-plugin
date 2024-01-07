@@ -42,10 +42,11 @@ public class SuppressByPurl implements Suppression {
 	public CharSequence print() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("- By PURL");
+
 		if (regex) {
-			builder.append(" [exact match]: ");
-		} else {
 			builder.append(" [as regex]: ");
+		} else {
+			builder.append(" [exact match]: ");
 		}
 
 		builder.append("[").append(purl).append("]");

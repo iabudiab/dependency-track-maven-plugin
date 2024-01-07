@@ -81,17 +81,17 @@ public class CheckPendingTokenMojo extends AbstractDependencyTrackMojo {
 
 		List<Finding> findings  = dtrack.loadFindings();
 		FindingsReport findingsReport = new FindingsReport(findings);
-		getLog().info(findingsReport.print());
+		getLog().info(InfoPrinter.print(findingsReport));
 
 		ProjectMetrics projectMetrics = dtrack.loadProjectMetrics();
-		getLog().info(projectMetrics.print());
+		getLog().info(InfoPrinter.print(projectMetrics));
 
 		Suppressions suppressions = dtrack.getSuppressions();
 		getLog().info(securityGate.print());
 		getLog().info(suppressions.print());
 
-		SecurityReport securityReport = securityGate.applyOn(findings, suppressions);
-		securityReport.execute(getLog());
+		SecurityGateDecision decision = securityGate.checkAgainst(findings, suppressions);
+		decision.execute(getLog());
 	}
 
 	private UUID loadToken() throws IOException {

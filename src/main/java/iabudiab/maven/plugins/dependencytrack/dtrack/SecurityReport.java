@@ -20,23 +20,10 @@ import org.apache.maven.plugin.logging.Log;
 @Data
 @AllArgsConstructor
 public class SecurityReport {
-	private boolean passed;
-	private String report;
+
+	private String details;
 	private List<Finding> effectiveFindings;
 	private List<Suppression> effectiveSuppressions;
-
-	public void fail() {
-		passed = false;
-	}
-
-	public void execute(Log log) throws SecurityGateRejectionException {
-		log.info(report);
-
-		if (!isPassed()) {
-			log.warn("Project did not pass the Security Gate");
-			throw new SecurityGateRejectionException("Project did not pass the Security Gate");
-		}
-	}
 
 	public void cleanupSuppressionsFile(Log log, String suppressionsFile) throws MojoExecutionException {
 		try {

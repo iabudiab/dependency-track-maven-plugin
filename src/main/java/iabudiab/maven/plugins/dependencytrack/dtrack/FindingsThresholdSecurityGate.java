@@ -30,8 +30,9 @@ public class FindingsThresholdSecurityGate implements SecurityGate {
 	}
 
 	@Override
-	public SecurityReport applyOn(List<Finding> findings, Suppressions suppressions) {
+	public SecurityGateDecision checkAgainst(List<Finding> findings, Suppressions suppressions) {
 		SecurityReport securityReport = processSuppressions(findings, suppressions);
+		SecurityGateDecision decision = new SecurityGateDecision(SecurityGateDecision.Decision.PASS, securityReport);
 
 		Map<Severity, Long> statistics = securityReport.getEffectiveFindings()
 			.stream()
@@ -43,10 +44,10 @@ public class FindingsThresholdSecurityGate implements SecurityGate {
 			statistics.getOrDefault(Severity.HIGH, 0L) > high ||
 			statistics.getOrDefault(Severity.MEDIUM, 0L) > medium ||
 			statistics.getOrDefault(Severity.LOW, 0L) > low) {
-			securityReport.fail();
+			decision.fail();
 		}
 
-		return securityReport;
+		return decision;
 	}
 
 	private SecurityReport processSuppressions(List<Finding> findings, Suppressions suppressions) {
@@ -109,7 +110,7 @@ public class FindingsThresholdSecurityGate implements SecurityGate {
 		List<Suppression> effectiveSuppressions = new ArrayList<>(suppressions.getSuppressions());
 		effectiveSuppressions.removeAll(remainingSuppression);
 
-		return new SecurityReport(true, reportBuilder.toString(), effectiveFindings, effectiveSuppressions);
+		return new SecurityReport(reportBuilder.toString(), effectiveFindings, effectiveSuppressions);
 	}
 
 	public CharSequence print() {

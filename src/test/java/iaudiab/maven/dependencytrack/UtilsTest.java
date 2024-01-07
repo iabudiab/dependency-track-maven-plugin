@@ -5,10 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
+import iabudiab.maven.plugins.dependencytrack.client.CompletableFutureUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -25,11 +27,18 @@ public class UtilsTest {
 			Supplier<Integer> nullSupplier = () -> {
 				return null;
 			};
-			assertThrows(CompletionException.class, () -> Utils.retry(nullSupplier, result -> result == null, 2, 0, 2, log).join());
-			Mockito.verify(log, Mockito.times(1)).info(Mockito.eq("retry condition met, so retrying after '2' seconds (current retry count: '0'; max. retries: '2')"));
-			Mockito.verify(log, Mockito.times(1)).info(Mockito.eq("retry condition met, so retrying after '2' seconds (current retry count: '1'; max. retries: '2')"));
-			Mockito.verify(log, Mockito.times(1)).info(Mockito.eq("retry condition met, so retrying after '2' seconds (current retry count: '2'; max. retries: '2')"));
-			Mockito.verify(log, Mockito.times(1)).warn(Mockito.eq("hit retry limit of '2'!"));
+
+			assertThrows(CompletionException.class, () -> CompletableFutureUtils
+				.retry(nullSupplier, Objects::isNull, 2, 0, 2, log).join());
+
+			Mockito.verify(log, Mockito.times(1))
+				.info(Mockito.eq("retry condition met, so retrying after '2' seconds (current retry count: '0'; max. retries: '2')"));
+			Mockito.verify(log, Mockito.times(1))
+				.info(Mockito.eq("retry condition met, so retrying after '2' seconds (current retry count: '1'; max. retries: '2')"));
+			Mockito.verify(log, Mockito.times(1))
+				.info(Mockito.eq("retry condition met, so retrying after '2' seconds (current retry count: '2'; max. retries: '2')"));
+			Mockito.verify(log, Mockito.times(1))
+				.warn(Mockito.eq("hit retry limit of '2'!"));
 		}
 
 		{
@@ -38,7 +47,8 @@ public class UtilsTest {
 				return 43;
 			};
 
-			assertEquals(43, Utils.retry(valueSupplier, result -> result == null, 2, 0, 2, log).join());
+			assertEquals(43, CompletableFutureUtils
+				.retry(valueSupplier, Objects::isNull, 2, 0, 2, log).join());
 			Mockito.verify(log, Mockito.times(0)).info(Mockito.anyString());
 			Mockito.verify(log, Mockito.times(0)).warn(Mockito.anyString());
 		}
@@ -47,16 +57,20 @@ public class UtilsTest {
 			Log log = Mockito.mock(Log.class);
 
 			ConcurrentLinkedQueue<Integer> values = new ConcurrentLinkedQueue<>(Arrays.asList(0, 1, 2, 3, 4, 5));
-			Supplier<Integer> valueSupplier = () -> {
-				return values.remove();
-			};
+			Supplier<Integer> valueSupplier = values::remove;
 
-			assertEquals(3, Utils.retry(valueSupplier, value -> value < 3, 1, 0, 5, log).join());
-			Mockito.verify(log, Mockito.times(3)).info(Mockito.anyString());
-			Mockito.verify(log, Mockito.times(1)).info(Mockito.eq("retry condition met, so retrying after '1' seconds (current retry count: '0'; max. retries: '5')"));
-			Mockito.verify(log, Mockito.times(1)).info(Mockito.eq("retry condition met, so retrying after '1' seconds (current retry count: '1'; max. retries: '5')"));
-			Mockito.verify(log, Mockito.times(1)).info(Mockito.eq("retry condition met, so retrying after '1' seconds (current retry count: '2'; max. retries: '5')"));
-			Mockito.verify(log, Mockito.times(0)).warn(Mockito.anyString());
+			assertEquals(3, CompletableFutureUtils
+				.retry(valueSupplier, value -> value < 3, 1, 0, 5, log).join());
+			Mockito.verify(log, Mockito.times(3))
+				.info(Mockito.anyString());
+			Mockito.verify(log, Mockito.times(1))
+				.info(Mockito.eq("retry condition met, so retrying after '1' seconds (current retry count: '0'; max. retries: '5')"));
+			Mockito.verify(log, Mockito.times(1))
+				.info(Mockito.eq("retry condition met, so retrying after '1' seconds (current retry count: '1'; max. retries: '5')"));
+			Mockito.verify(log, Mockito.times(1))
+				.info(Mockito.eq("retry condition met, so retrying after '1' seconds (current retry count: '2'; max. retries: '5')"));
+			Mockito.verify(log, Mockito.times(0))
+				.warn(Mockito.anyString());
 		}
 	}
 }
