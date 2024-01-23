@@ -39,7 +39,7 @@ public class Suppressions {
 		builder.append("--- Custom Suppressions ---");
 		builder.append("\n");
 		if (suppressions.isEmpty()) {
-			builder.append("None");
+			builder.append("- None");
 		} else {
 			for (Suppression suppression : suppressions) {
 				builder.append(suppression.print());

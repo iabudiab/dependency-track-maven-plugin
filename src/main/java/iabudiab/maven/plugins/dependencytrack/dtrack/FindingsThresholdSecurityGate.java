@@ -117,13 +117,16 @@ public class FindingsThresholdSecurityGate implements SecurityGate {
 		StringBuilder builder = new StringBuilder();
 		builder.append("--- Security Gate ---");
 		builder.append("\n");
-		builder.append("critical: ");
+		builder.append("- critical: ");
 		builder.append(critical);
-		builder.append(", high: ");
+		builder.append("\n");
+		builder.append("- high:     ");
 		builder.append(high);
-		builder.append(", medium: ");
+		builder.append("\n");
+		builder.append("- medium:   ");
 		builder.append(medium);
-		builder.append(", low: ");
+		builder.append("\n");
+		builder.append("- low:      ");
 		builder.append(low);
 		return builder.toString();
 	}

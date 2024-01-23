@@ -12,13 +12,13 @@ public class InfoPrinter {
 		StringBuilder builder = new StringBuilder();
 		builder.append("--- Project Metrics ---");
 		appendLine(builder, "- Inherited Risk Score: ", metrics.getInheritedRiskScore());
-		appendLine(builder, "- Vulnerabilities: ", metrics.getVulnerabilities());
-		appendLine(builder, "- Findings Total: ", metrics.getFindingsTotal());
-		appendLine(builder, "- Findings Audited: ", metrics.getFindingsAudited());
-		appendLine(builder, "- Critical: ", metrics.getCritical());
-		appendLine(builder, "- High: ", metrics.getHigh());
-		appendLine(builder, "- Medium: ", metrics.getMedium());
-		appendLine(builder, "- Low: ", metrics.getLow());
+		appendLine(builder, "- Vulnerabilities:      ", metrics.getVulnerabilities());
+		appendLine(builder, "- Findings Total:       ", metrics.getFindingsTotal());
+		appendLine(builder, "- Findings Audited:     ", metrics.getFindingsAudited());
+		appendLine(builder, "- Critical:             ", metrics.getCritical());
+		appendLine(builder, "- High:                 ", metrics.getHigh());
+		appendLine(builder, "- Medium:               ", metrics.getMedium());
+		appendLine(builder, "- Low:                  ", metrics.getLow());
 		return builder.toString();
 	}
 
