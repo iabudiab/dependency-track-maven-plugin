@@ -10,6 +10,7 @@ import lombok.Data;
 
 @Data
 public class Suppressions {
+
 	private List<Suppression> suppressions;
 
 	public static Suppressions none() {
@@ -18,6 +19,14 @@ public class Suppressions {
 
 	public Suppressions(@JsonProperty("suppressions") List<Suppression> suppressions) {
 		this.suppressions = suppressions;
+	}
+
+	public boolean hasSuppressions() {
+		return !isEmpty();
+	}
+
+	public boolean isEmpty() {
+		return suppressions.isEmpty();
 	}
 
 	public boolean shouldSuppress(Finding finding) {

@@ -166,6 +166,10 @@ public class DTrack {
 	}
 
 	public void applySuppressions(boolean resetExpiredSuppressions) throws DTrackException {
+		if (suppressions.isEmpty()) {
+			return;
+		}
+
 		if (findings == null) {
 			loadFindings();
 		}
