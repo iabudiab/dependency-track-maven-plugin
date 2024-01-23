@@ -32,7 +32,7 @@ To use the plugin add it into the `build` section of your `pom.xml`. The minimal
 <plugin>
     <groupId>dev.iabudiab</groupId>
     <artifactId>dependency-track-maven-plugin</artifactId>
-    <version>2.1.0</version>
+    <version>2.4.1</version>
     <configuration>
         <dependencyTrackUrl>https://dependency-track-installation</dependencyTrackUrl>
         <dependencyTrackApiKey>${env.DTRACK_API_KEY}</dependencyTrackApiKey>
