@@ -2,6 +2,10 @@ package iaudiab.maven.dependencytrack;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -31,14 +35,14 @@ public class UtilsTest {
 			assertThrows(CompletionException.class, () -> CompletableFutureUtils
 				.retry(nullSupplier, Objects::isNull, 2, 0, 2, log).join());
 
-			Mockito.verify(log, Mockito.times(1))
-				.info(Mockito.eq("retry condition met, so retrying after '2' seconds (current retry count: '0'; max. retries: '2')"));
-			Mockito.verify(log, Mockito.times(1))
-				.info(Mockito.eq("retry condition met, so retrying after '2' seconds (current retry count: '1'; max. retries: '2')"));
-			Mockito.verify(log, Mockito.times(1))
-				.info(Mockito.eq("retry condition met, so retrying after '2' seconds (current retry count: '2'; max. retries: '2')"));
-			Mockito.verify(log, Mockito.times(1))
-				.warn(Mockito.eq("hit retry limit of '2'!"));
+			verify(log, times(1))
+				.info(eq("Retry condition met, so retrying after '2' seconds (current retry count: '0'; max. retries: '2')"));
+			verify(log, times(1))
+				.info(eq("Retry condition met, so retrying after '2' seconds (current retry count: '1'; max. retries: '2')"));
+			verify(log, times(1))
+				.info(eq("Retry condition met, so retrying after '2' seconds (current retry count: '2'; max. retries: '2')"));
+			verify(log, times(1))
+				.warn(eq("Hit retry limit of '2'!"));
 		}
 
 		{
@@ -49,8 +53,9 @@ public class UtilsTest {
 
 			assertEquals(43, CompletableFutureUtils
 				.retry(valueSupplier, Objects::isNull, 2, 0, 2, log).join());
-			Mockito.verify(log, Mockito.times(0)).info(Mockito.anyString());
-			Mockito.verify(log, Mockito.times(0)).warn(Mockito.anyString());
+
+			verify(log, times(0)).info(anyString());
+			verify(log, times(0)).warn(anyString());
 		}
 
 		{
@@ -61,16 +66,17 @@ public class UtilsTest {
 
 			assertEquals(3, CompletableFutureUtils
 				.retry(valueSupplier, value -> value < 3, 1, 0, 5, log).join());
-			Mockito.verify(log, Mockito.times(3))
-				.info(Mockito.anyString());
-			Mockito.verify(log, Mockito.times(1))
-				.info(Mockito.eq("retry condition met, so retrying after '1' seconds (current retry count: '0'; max. retries: '5')"));
-			Mockito.verify(log, Mockito.times(1))
-				.info(Mockito.eq("retry condition met, so retrying after '1' seconds (current retry count: '1'; max. retries: '5')"));
-			Mockito.verify(log, Mockito.times(1))
-				.info(Mockito.eq("retry condition met, so retrying after '1' seconds (current retry count: '2'; max. retries: '5')"));
-			Mockito.verify(log, Mockito.times(0))
-				.warn(Mockito.anyString());
+
+			verify(log, times(3))
+				.info(anyString());
+			verify(log, times(1))
+				.info(eq("Retry condition met, so retrying after '1' seconds (current retry count: '0'; max. retries: '5')"));
+			verify(log, times(1))
+				.info(eq("Retry condition met, so retrying after '1' seconds (current retry count: '1'; max. retries: '5')"));
+			verify(log, times(1))
+				.info(eq("Retry condition met, so retrying after '1' seconds (current retry count: '2'; max. retries: '5')"));
+			verify(log, times(0))
+				.warn(anyString());
 		}
 	}
 }
