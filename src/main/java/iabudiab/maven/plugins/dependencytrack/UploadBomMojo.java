@@ -153,17 +153,16 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		getLog().info(securityGate.print());
 		getLog().info(suppressions.print());
 
-		if (findings == null || !uploadMatchingSuppressions) {
-			getLog().info("Skip checking for matching suppressions to be uploaded");
-			return;
+		if (uploadMatchingSuppressions) {
+			getLog().info("Applying suppressions");
+			dtrack.applySuppressions(resetExpiredSuppressions);
 		}
-
-		dtrack.applySuppressions(resetExpiredSuppressions);
 
 		SecurityGateDecision decision = securityGate.checkAgainst(findings, suppressions);
 		decision.execute(getLog());
 
 		if (cleanupSuppressions) {
+			getLog().info("Cleaning suppression file");
 			decision.getReport().cleanupSuppressionsFile(getLog(), cleanupSuppressionsFile);
 		}
 	}
