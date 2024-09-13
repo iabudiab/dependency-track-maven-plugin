@@ -13,6 +13,10 @@ public class BomSubmitRequest {
 
 	private String projectVersion;
 
+	private String parentName;
+
+	private String parentVersion;
+
 	private Boolean autoCreate;
 
 	private String bom;

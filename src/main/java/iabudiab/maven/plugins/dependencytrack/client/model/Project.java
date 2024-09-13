@@ -13,4 +13,5 @@ public class Project {
 	private UUID uuid;
 	private String name;
 	private String version;
+	private Project parent;
 }

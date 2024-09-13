@@ -156,9 +156,11 @@ Configuration:
 
 Uploads a CycloneDX or SPDX BOM to Dependency-Track. A project is created in Dependency-Track if it doesn't already exist.
 
+If both, `parentName` and `parentVersion` are specified (not empty), the appropriate parent project will be applied as a parent to the target project. If `autoCreateParent` is set to `true` and no matching parent project found in Dependency-Track, an appropriate parent project will be created first, otherwise the assigned parent project will be left as is. 
+
 Upon uploading a BOM to Dependency-Track a token is returned, which can be checked for processing status if `pollToken` is `true`.
 
-If `pollToken` is set to `false`, then this goal would upload the BOM, write the token to a file at `tokenFile` and then exit.
+If `pollToken` is set to `false`, then this goal would upload the BOM, optionally assign the specified parent project, write the token to a file at `tokenFile` and then exit.
 
 Once the token is processed, the findings are available and can be fetched for further analysis.
 
@@ -197,10 +199,13 @@ Configuration:
 | `projectMetricsRetryDelay`   | Delay between each retry requesting project metrics                                 | `5` seconds                                                                   |
 | `projectMetricsRetryLimit`   | Maximum number of retries requesting project metrics                                | `3` times <br/>                                                               |
 | `securityGate`               | The security gate configuration                                                     | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul> |
-| `uploadMatchingSuppressions` | Whether to upload matching suppression or not	                                      | `false`                                                                       |
+| `uploadMatchingSuppressions` | Whether to upload matching suppression or not	                                     | `false`                                                                       |
 | `resetExpiredSuppressions`   | Whether to reset matching expired suppression or not                                | `true`                                                                        |
 | `cleanupSuppressions`        | Whether to generate a cleaned up suppressions file without unnecessary suppressions | `true`                                                                        |
 | `cleanupSuppressionsFile`    | The file path into which the suppressions will be written                           | `${project.build.directory}/dependency-track/suppressions.json `              |
+| `parentName`                 | The unique name of the parent project in Dependency-Track                           | empty                                                                         |
+| `parentVersion`              | The version of the parent project in Dependency-Track                               | empty                                                                         |
+| `autoCreateParent`           | Whether to create or not the specified parent project if no such project exists     | `false`                                                                       |
 
 ---
 
