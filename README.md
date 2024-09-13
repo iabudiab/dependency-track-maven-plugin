@@ -145,7 +145,7 @@ Configuration:
 
 | Parameter                 | Description                                                | Default Value                               |
 |---------------------------|------------------------------------------------------------|---------------------------------------------|
-| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}`  |
+| `projectName`             | The unique name of the project in Dependency-Track         | `${project.groupId}.${project.artifactId}`  |
 | `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}`                        |
 | `artifactDir`             | The directory of the artifact to upload                    | `${project.build.directory}`                |
 | `artifactName`            | The name of the artifact to upload                         | `dependency-check-report.xml`               |
@@ -189,7 +189,7 @@ Configuration:
 
 | Parameter                    | Description                                                                         | Default Value                                                                 |
 |------------------------------|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| `projectName`                | The unique name of the porject in Dependency-Track                                  | `${project.groupId}.${project.artifactId}`                                    |
+| `projectName`                | The unique name of the project in Dependency-Track                                  | `${project.groupId}.${project.artifactId}`                                    |
 | `projectVersion`             | The version of the project in Dependency-Track                                      | `${project.version}`                                                          |
 | `artifactDir`                | The directory of the artifact to upload                                             | `${project.build.directory}`                                                  |
 | `artifactName`               | The name of the artifact to upload                                                  | `bom.xml`                                                                     |
@@ -217,7 +217,7 @@ Configuration:
 
 | Parameter          | Description                                                                   | Default Value                                                   |
 |--------------------|-------------------------------------------------------------------------------|-----------------------------------------------------------------|
-| `projectName`      | The unique name of the porject in Dependency-Track                            | `${project.groupId}.${project.artifactId}`                      |
+| `projectName`      | The unique name of the project in Dependency-Track                            | `${project.groupId}.${project.artifactId}`                      |
 | `projectVersion`   | The version of the project in Dependency-Track                                | `${project.version}`                                            |
 | `destinationPath`  | The destination directory where the BOM will be downloaded                    | `${project.build.directory}/${project.build.finalName}_bom.xml` |
 | `outputFormat`     | The format of the BOM to download from Dependency-Track (**XML** or **JSON**) | XML                                                             |
@@ -235,7 +235,7 @@ Configuration:
 
 | Parameter                 | Description                                                | Default Value                                                                   |
 |---------------------------|------------------------------------------------------------|---------------------------------------------------------------------------------|
-| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}`                                      |
+| `projectName`             | The unique name of the project in Dependency-Track         | `${project.groupId}.${project.artifactId}`                                      |
 | `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}`                                                            |
 | `tokenFile`               | The file path into which the token will be written         | `${project.build.directory}/dependency-track/pendingToken`                      |
 | `tokenValue`              | The UUID value of the pending token                        |                                                                                 |
@@ -252,7 +252,7 @@ Configuration:
 
 | Parameter                 | Description                                                | Default Value                                                                   |
 |---------------------------|------------------------------------------------------------|---------------------------------------------------------------------------------|
-| `projectName`             | The unique name of the porject in Dependency-Track         | `${project.groupId}.${project.artifactId}`                                      |
+| `projectName`             | The unique name of the project in Dependency-Track         | `${project.groupId}.${project.artifactId}`                                      |
 | `projectVersion`          | The version of the project in Dependency-Track             | `${project.version}`                                                            |
 | `securityGate`            | The security gate configuration                            | <ul><li>critial: 0</li><li>high: 0</li><li>medium: 0</li><li>low: 0</li></ul>   |
 
@@ -308,7 +308,7 @@ Here are all the main configuration parameters summarized:
 | `skip`                       | Skip plugin execution for the current project            | `false`                                                                                                  |
 | `failOnError`                | Whether errors should fail the build                     | `true`                                                                                                   |
 | `logPayloads`                | Whether the plugin should log request/response payloads  | `false`                                                                                                  |
-| `projectName`                | The unique name of the porject in Dependency-Track       | `${project.groupId}.${project.artifactId}`                                                               |
+| `projectName`                | The unique name of the project in Dependency-Track       | `${project.groupId}.${project.artifactId}`                                                               |
 | `projectVersion`             | The version of the project in Dependency-Track           | `${project.version}`                                                                                     |
 | `artifactDir`                | The directory of the artifact to upload                  | `${project.build.directory}`                                                                             |
 | `artifactName`               | The name of the artifact to upload                       | <ul><li>`upload-scan` goal: `dependency-check-report.xml`</li><li>`upload-bom` goal: `bom.xml`</li></ul> |

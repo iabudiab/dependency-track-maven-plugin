@@ -1,22 +1,24 @@
 package iabudiab.maven.plugins.dependencytrack;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
-import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
-import iabudiab.maven.plugins.dependencytrack.client.model.Project;
-import iabudiab.maven.plugins.dependencytrack.cyclone.*;
-import iabudiab.maven.plugins.dependencytrack.dtrack.DTrack;
-import iabudiab.maven.plugins.dependencytrack.dtrack.DTrackException;
-import iabudiab.maven.plugins.dependencytrack.dtrack.DTrackNotFoundException;
-import org.apache.http.client.HttpResponseException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.cyclonedx.model.Bom;
+
+import iabudiab.maven.plugins.dependencytrack.cyclone.BomFormat;
+import iabudiab.maven.plugins.dependencytrack.cyclone.BomUtils;
+import iabudiab.maven.plugins.dependencytrack.cyclone.DiffResult;
+import iabudiab.maven.plugins.dependencytrack.cyclone.DiffResultsWriter;
+import iabudiab.maven.plugins.dependencytrack.cyclone.DiffUtils;
+import iabudiab.maven.plugins.dependencytrack.cyclone.OutputFormat;
+import iabudiab.maven.plugins.dependencytrack.dtrack.DTrack;
+import iabudiab.maven.plugins.dependencytrack.dtrack.DTrackException;
+import iabudiab.maven.plugins.dependencytrack.dtrack.DTrackNotFoundException;
 
 /**
  * Mojo for building a Diff between a local BOM and the corresponding BOM in Dependency Track.
