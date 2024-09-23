@@ -12,12 +12,22 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import iabudiab.maven.plugins.dependencytrack.cyclone.BomFormat;
+import org.apache.http.client.HttpResponseException;
+
 import iabudiab.maven.plugins.dependencytrack.client.DTrackClient;
-import iabudiab.maven.plugins.dependencytrack.client.model.*;
+import iabudiab.maven.plugins.dependencytrack.client.model.Analysis;
+import iabudiab.maven.plugins.dependencytrack.client.model.AnalysisJustification;
+import iabudiab.maven.plugins.dependencytrack.client.model.AnalysisResponse;
+import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
+import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
+import iabudiab.maven.plugins.dependencytrack.client.model.Project;
+import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
+import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
+import iabudiab.maven.plugins.dependencytrack.client.model.State;
+import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
+import iabudiab.maven.plugins.dependencytrack.cyclone.BomFormat;
 import iabudiab.maven.plugins.dependencytrack.suppressions.Suppression;
 import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
-import org.apache.http.client.HttpResponseException;
 
 public class DTrack {
 
@@ -30,7 +40,10 @@ public class DTrack {
 	private List<Finding> findings;
 	private ProjectMetrics projectMetrics;
 
-	public DTrack(DTrackClient client, Suppressions suppressions, String projectName, String projectVersion) {
+	public DTrack(DTrackClient client,
+				Suppressions suppressions,
+				String projectName,
+				String projectVersion) {
 		this.client = client;
 		this.suppressions = suppressions;
 		this.projectName = projectName;
@@ -70,13 +83,17 @@ public class DTrack {
 			.autoCreate(true) //
 			.build();
 
+		
+		TokenResponse response = null;
 		try {
-			return client.uploadBom(payload);
+			response = client.uploadBom(payload);
 		} catch (HttpResponseException e) {
 			throw handleCommonErrors(e);
 		} catch (IOException e) {
 			throw new DTrackException("Error uploading bom: ", e);
 		}
+
+		return response;
 	}
 
 	public File downloadBom(Path path, BomFormat outputFormat) {
@@ -93,10 +110,26 @@ public class DTrack {
 		}
 	}
 
-	public Project loadProject() throws DTrackException {
+	public Project findProject(String projectName, String projectVersion) throws DTrackException {
 		try {
-			this.project = client.getProject(projectName, projectVersion);
-			return project;
+			return client.getProject(projectName, projectVersion);
+		} catch (HttpResponseException e) {
+			if(e.getStatusCode() == 404) return null;
+			else throw handleCommonErrors(e);
+		} catch (IOException e) {
+			throw new DTrackException("Error loading project: ", e);
+		}
+	}
+
+	public Project loadProject() throws DTrackException {
+		this.project = findProject(projectName, projectVersion);
+		if(this.project == null) throw new DTrackNotFoundException("project '"+ projectName +":"+ projectVersion +"' not found!");
+		return this.project;
+	}
+
+	public Project createProject(String projectName, String projectVersion) throws DTrackException {
+		try {
+			return client.createProject(projectName, projectVersion);
 		} catch (HttpResponseException e) {
 			throw handleCommonErrors(e);
 		} catch (IOException e) {
@@ -104,8 +137,18 @@ public class DTrack {
 		}
 	}
 
-	public boolean pollToken(UUID token, int durationSeconds) {
+	public Project applyParentProject(Project project, Project parentProject) {
 		try {
+			return client.applyProjectParent(project, parentProject);
+		} catch (HttpResponseException e) {
+			throw handleCommonErrors(e);
+		} catch (IOException e) {
+			throw new DTrackException("Error applying parent: ", e);
+		}
+	}
+
+	public boolean pollToken(UUID token, int durationSeconds) {
+		try { 
 			return client.pollTokenProcessing(token, ForkJoinPool.commonPool())
 				.get(durationSeconds, TimeUnit.SECONDS);
 		} catch (TimeoutException | InterruptedException | ExecutionException e) {

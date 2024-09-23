@@ -1,7 +1,6 @@
 package iabudiab.maven.plugins.dependencytrack.dtrack;
 
 import java.util.List;
-import java.util.Optional;
 
 import iabudiab.maven.plugins.dependencytrack.client.model.Analysis;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;

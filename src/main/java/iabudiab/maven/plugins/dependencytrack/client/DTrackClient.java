@@ -6,16 +6,19 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import iabudiab.maven.plugins.dependencytrack.cyclone.BomFormat;
-import iabudiab.maven.plugins.dependencytrack.client.model.*;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
@@ -25,6 +28,7 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.EntityBuilder;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -35,6 +39,18 @@ import org.apache.http.util.EntityUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.io.InputStreamFacade;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import iabudiab.maven.plugins.dependencytrack.client.model.Analysis;
+import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
+import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
+import iabudiab.maven.plugins.dependencytrack.client.model.Project;
+import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
+import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
+import iabudiab.maven.plugins.dependencytrack.client.model.TokenProcessedResponse;
+import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
+import iabudiab.maven.plugins.dependencytrack.cyclone.BomFormat;
 
 public class DTrackClient {
 
@@ -173,6 +189,30 @@ public class DTrackClient {
 		return client.execute(request, responseBodyHandler(Project.class));
 	}
 
+	public Project createProject(String name, String version) throws IOException {
+		URI uri = baseUri.resolve(API_PROJECT);
+		Project payload = new Project();
+		payload.setName(name);
+		payload.setVersion(version);
+		String payloadAsString = objectMapper.writeValueAsString(payload);
+		HttpPut request = httpPut(uri, payloadAsString);
+		log.info("creating project '"+ payload.getName() +":"+ payload.getVersion() +"' by: " + uri);
+		Project response = client.execute(request, responseBodyHandler(Project.class));
+		log.info("successfully created project uuid: " + response.getUuid());
+		return response;
+	}
+
+	public Project applyProjectParent(Project project, Project parent) throws IOException {
+		URI uri = baseUri.resolve(API_PROJECT +"/"+ project.getUuid().toString() + "?suppressed=true");
+		Map<String, Object> payload = Collections.singletonMap("parent", Collections.singletonMap("uuid", parent.getUuid().toString()));
+		String payloadAsString = objectMapper.writeValueAsString(payload);
+		HttpPatch request = httpPatch(uri, payloadAsString);
+		log.info("patching project '"+ project.getName() +":"+ project.getVersion() +"' to apply parent '"+ parent.getName() +":"+ parent.getVersion() +"' by: " + uri);
+		Project response = client.execute(request, responseBodyHandler(Project.class));
+		log.info("successfully patched project '"+ project.getName() +":"+ project.getVersion() +"' by applying parent '"+ parent.getName() +":"+ parent.getVersion() +"'");
+		return response;
+	}
+
 	public List<Finding> getProjectFindings(UUID projectId) throws IOException {
 		URI uri = baseUri.resolve(API_PROJECT_FINDINGS + projectId.toString() + "?suppressed=true");
 		log.debug("Invoking uri => " + uri);
@@ -287,6 +327,13 @@ public class DTrackClient {
 	private HttpGet httpGet(URI uri) {
 		HttpGet request = new HttpGet();
 		request.setURI(uri);
+		return request;
+	}
+
+	private HttpPatch httpPatch(URI uri, String body) {
+		HttpPatch request = new HttpPatch();
+		request.setURI(uri);
+		request.setEntity(EntityBuilder.create().setText(body).build());
 		return request;
 	}
 }
