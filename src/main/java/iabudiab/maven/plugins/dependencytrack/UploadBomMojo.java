@@ -153,11 +153,10 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 		TokenResponse tokenResponse = dtrack.uploadBom(path);
 
-		if(!ObjectUtils.isEmpty(parentName) && !ObjectUtils.isEmpty(parentVersion)) {
+		if (!ObjectUtils.isEmpty(parentName) && !ObjectUtils.isEmpty(parentVersion)) {
 			applyParent(dtrack);
-		}
-		else {
-			getLog().debug("no parent specified");
+		} else {
+			getLog().debug("No parent specified");
 		}
 
 		try {
@@ -209,33 +208,43 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		Project project = dtrack.findProject(projectName, projectVersion);
 
 		// check if the desired parent is not already set
-		if(project.getParent() == null || !parentName.equals(project.getParent().getName()) || !parentVersion.equals(project.getParent().getVersion()) ) {
-			// try to obtain the parent project
-			Project parentProject = dtrack.findProject(parentName, parentVersion);
+		Project parentProject = project.getParent();
 
-			if(parentProject == null) {
-				if(autoCreateParent) {
-					// if no such parent project found, create it
-					getLog().info("parent project '"+ parentName +":"+ parentVersion +"' not found, but since 'autoCreateParent' is set to 'true', trying to create it");
-					
-					parentProject = dtrack.createProject(parentName, parentVersion);
-					
-					getLog().info("parent project '"+ parentName +":"+ parentVersion +"' successfully created with uuid '"+ parentProject.getUuid() +"'");
-				}
-				else {
-					getLog().info("parent project '"+ parentName +":"+ parentVersion +"' not found and 'autoCreateParent' is set to 'false', so not trying to create it");
-				}
-			}
+		if (parentProject != null && parentName.equals(parentProject.getName()) && parentVersion.equals(parentProject.getVersion())) {
+			getLog().info(String.format("The parent '%s:%s' is already assigned, so no need to apply it again",
+				parentProject.getName(), parentProject.getVersion()
+			));
+			return;
+		}
 
-			if(parentProject != null) {
-				project = dtrack.applyParentProject(project, parentProject);
-			}
-			else {
-				getLog().warn("skip applying parent project");
+		// try to obtain the parent project
+		parentProject = dtrack.findProject(parentName, parentVersion);
+
+		if (parentProject == null) {
+			if (autoCreateParent) {
+				// if no such parent project found, create it
+				getLog().info(String.format(
+					"Parent project '%s:%s' not found, but since 'autoCreateParent' is set to 'true', trying to create it",
+					parentName, parentVersion
+				));
+
+				parentProject = dtrack.createProject(parentName, parentVersion);
+
+				getLog().info(String.format("Parent project '%s:%s' successfully created with uuid '%s'",
+					parentName, parentVersion, parentProject.getUuid()
+				));
+			} else {
+				getLog().info(String.format(
+					"Parent project '%s:%s' not found and 'autoCreateParent' is set to 'false', so not trying to create it",
+					parentName, parentVersion
+				));
 			}
 		}
-		else {
-			getLog().info("the parent '"+ project.getParent().getName() +":"+ project.getParent().getVersion() +"' is already assigned, so no need to apply it again");
+
+		if (parentProject != null) {
+			dtrack.applyParentProject(project, parentProject);
+		} else {
+			getLog().warn("Skip applying parent project");
 		}
 	}
 

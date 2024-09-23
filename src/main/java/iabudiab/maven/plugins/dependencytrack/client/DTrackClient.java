@@ -114,8 +114,11 @@ public class DTrackClient {
 		URI uri = baseUri.resolve(API_ANALYSIS);
 		String payloadAsString = objectMapper.writeValueAsString(payload);
 		HttpPut request = httpPut(uri, payloadAsString);
-		log.info("Uploading analysis for project: " + payload.getProjectUuid()
-			+ ", component=" + payload.getComponentUuid() + ", vulnerability=" + payload.getVulnerabilityUuid());
+		log.info(String.format(
+			"Uploading analysis for project: %s, component=%s, vulnerability=%s",
+			payload.getProjectUuid(), payload.getComponentUuid(), payload.getVulnerabilityUuid()
+		));
+
 		if (logPayloads) {
 			log.info("Analysis payload: ");
 		}
@@ -162,7 +165,7 @@ public class DTrackClient {
 			}
 		};
 
-		return CompletableFuture.supplyAsync(checkToken, executor) //
+		return CompletableFuture.supplyAsync(checkToken, executor)
 			.thenCompose(isProcessing -> {
 				if (isProcessing) {
 					try {
@@ -196,20 +199,26 @@ public class DTrackClient {
 		payload.setVersion(version);
 		String payloadAsString = objectMapper.writeValueAsString(payload);
 		HttpPut request = httpPut(uri, payloadAsString);
-		log.info("creating project '"+ payload.getName() +":"+ payload.getVersion() +"' by: " + uri);
+		log.info(String.format("Creating project '%s:%s' by: %s", payload.getName(), payload.getVersion(), uri));
 		Project response = client.execute(request, responseBodyHandler(Project.class));
 		log.info("successfully created project uuid: " + response.getUuid());
 		return response;
 	}
 
 	public Project applyProjectParent(Project project, Project parent) throws IOException {
-		URI uri = baseUri.resolve(API_PROJECT +"/"+ project.getUuid().toString() + "?suppressed=true");
+		URI uri = baseUri.resolve(API_PROJECT + "/" + project.getUuid().toString());
 		Map<String, Object> payload = Collections.singletonMap("parent", Collections.singletonMap("uuid", parent.getUuid().toString()));
 		String payloadAsString = objectMapper.writeValueAsString(payload);
 		HttpPatch request = httpPatch(uri, payloadAsString);
-		log.info("patching project '"+ project.getName() +":"+ project.getVersion() +"' to apply parent '"+ parent.getName() +":"+ parent.getVersion() +"' by: " + uri);
+		log.info(String.format("Patching project '%s:%s' to apply parent '%s:%s' by: %s",
+			project.getName(), project.getVersion(), parent.getName(), parent.getVersion(), uri
+		));
+
 		Project response = client.execute(request, responseBodyHandler(Project.class));
-		log.info("successfully patched project '"+ project.getName() +":"+ project.getVersion() +"' by applying parent '"+ parent.getName() +":"+ parent.getVersion() +"'");
+		log.info(String.format(
+			"Successfully patched project '%s:%s' by applying parent '%s:%s'",
+			project.getName(), project.getVersion(), parent.getName(), parent.getVersion()
+		));
 		return response;
 	}
 

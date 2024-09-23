@@ -83,7 +83,6 @@ public class DTrack {
 			.autoCreate(true) //
 			.build();
 
-		
 		TokenResponse response = null;
 		try {
 			response = client.uploadBom(payload);
@@ -121,10 +120,11 @@ public class DTrack {
 		}
 	}
 
-	public Project loadProject() throws DTrackException {
+	private void loadProject() throws DTrackException {
 		this.project = findProject(projectName, projectVersion);
-		if(this.project == null) throw new DTrackNotFoundException("project '"+ projectName +":"+ projectVersion +"' not found!");
-		return this.project;
+		if (this.project == null) {
+			throw new DTrackNotFoundException("Project not found: " + projectName + ":" + projectVersion);
+		}
 	}
 
 	public Project createProject(String projectName, String projectVersion) throws DTrackException {
