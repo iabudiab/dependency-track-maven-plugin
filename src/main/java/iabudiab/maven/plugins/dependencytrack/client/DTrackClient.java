@@ -180,6 +180,12 @@ public class DTrackClient {
 			});
 	}
 
+	public Project getProject(UUID uuid) throws IOException {
+		URI uri = baseUri.resolve(API_PROJECT + "/" + uuid.toString());
+		HttpGet request = httpGet(uri);
+		return client.execute(request, responseBodyHandler(Project.class));
+	}
+
 	public Project getProject(String name) throws IOException {
 		URI uri = baseUri.resolve(API_PROJECT + "?name=" + name);
 		HttpGet request = httpGet(uri);

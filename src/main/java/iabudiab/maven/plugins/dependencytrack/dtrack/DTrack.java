@@ -109,6 +109,17 @@ public class DTrack {
 		}
 	}
 
+	public Project findProject(UUID uuid) throws DTrackException {
+		try {
+			return client.getProject(uuid);
+		} catch (HttpResponseException e) {
+			if(e.getStatusCode() == 404) return null;
+			else throw handleCommonErrors(e);
+		} catch (IOException e) {
+			throw new DTrackException("Error loading project: ", e);
+		}
+	}
+
 	public Project findProject(String projectName, String projectVersion) throws DTrackException {
 		try {
 			return client.getProject(projectName, projectVersion);

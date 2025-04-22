@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -117,6 +118,12 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	/**
 	 * The name of the parent project in Dependency-Track
 	 */
+	@Parameter(property = "parentIdentifier", defaultValue = "", required = false)
+	protected String parentIdentifier;
+
+	/**
+	 * The name of the parent project in Dependency-Track
+	 */
 	@Parameter(property = "parentName", defaultValue = "", required = false)
 	protected String parentName;
 
@@ -141,6 +148,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		getLog().info("Reset expired suppressions      : " + resetExpiredSuppressions);
 		getLog().info("ProjectMetrics retry delay      : " + projectMetricsRetryDelay);
 		getLog().info("ProjectMetrics retry limit      : " + projectMetricsRetryLimit);
+		getLog().info("Parent identifier               : " + parentIdentifier);
 		getLog().info("Parent name                     : " + parentName);
 		getLog().info("Parent version                  : " + parentVersion);
 		getLog().info("Auto create parent              : " + autoCreateParent);
@@ -153,7 +161,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 		TokenResponse tokenResponse = dtrack.uploadBom(path);
 
-		if (!ObjectUtils.isEmpty(parentName) && !ObjectUtils.isEmpty(parentVersion)) {
+		if ( !ObjectUtils.isEmpty(parentIdentifier) || (!ObjectUtils.isEmpty(parentName) && !ObjectUtils.isEmpty(parentVersion)) ) {
 			applyParent(dtrack);
 		} else {
 			getLog().debug("No parent specified");
@@ -207,10 +215,19 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	private void applyParent(DTrack dtrack) {
 		Project project = dtrack.findProject(projectName, projectVersion);
 
+		UUID parentUuid = null;
+		
+		try {
+			parentUuid = !ObjectUtils.isEmpty(parentIdentifier) ? UUID.fromString(parentIdentifier) : null;
+		} catch(IllegalArgumentException ex) {
+			getLog().warn(String.format("the given parent identifier '%s' could not be parsed to a valid UUID! Skip applying parent.", parentIdentifier), ex);
+			return;
+		}
+
 		// check if the desired parent is not already set
 		Project parentProject = project.getParent();
 
-		if (parentProject != null && parentName.equals(parentProject.getName()) && parentVersion.equals(parentProject.getVersion())) {
+		if (parentProject != null && ((parentUuid != null && parentUuid.equals(parentProject.getUuid())) || (parentName.equals(parentProject.getName()) && parentVersion.equals(parentProject.getVersion()))) ) {
 			getLog().info(String.format("The parent '%s:%s' is already assigned, so no need to apply it again",
 				parentProject.getName(), parentProject.getVersion()
 			));
@@ -218,9 +235,12 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		}
 
 		// try to obtain the parent project
-		parentProject = dtrack.findProject(parentName, parentVersion);
+		parentProject = parentUuid != null
+						? dtrack.findProject(parentUuid)
+						: dtrack.findProject(parentName, parentVersion);
 
-		if (parentProject == null) {
+		// autocreate should only be applied when parent project is specified by 'projectName' and 'projectVersion' and not by parent uuid
+		if (parentProject == null && parentUuid == null) {
 			if (autoCreateParent) {
 				// if no such parent project found, create it
 				getLog().info(String.format(
