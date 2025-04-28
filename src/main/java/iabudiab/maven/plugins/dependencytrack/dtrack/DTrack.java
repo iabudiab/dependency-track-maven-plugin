@@ -278,11 +278,11 @@ public class DTrack {
 
 	private static DTrackException handleCommonErrors(HttpResponseException e) {
 		if (e.getStatusCode() == 400) {
-			return new DTrackNotFoundException("Error uploading scan: " + e.getReasonPhrase(), e);
+			return new DTrackNotFoundException("Bad request: " + e.getReasonPhrase(), e);
 		} else if (e.getStatusCode() == 401) {
 			return new DTrackUnauthenticatedException("Unauthenticated: ", e);
 		} else {
-			return new DTrackException("Error uploading scan: ", e);
+			return new DTrackException("unexpected response: ", e);
 		}
 	}
 }
