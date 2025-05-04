@@ -25,6 +25,14 @@ public class SuppressCve implements Suppression {
 
 	@Override
 	public boolean suppressesFinding(Finding finding) {
+		if (finding == null) {
+			return false;
+		}
+
+		if (finding.getVulnerability() == null) {
+			return false;
+		}
+
 		return cve.equals(finding.getVulnerability().getVulnId());
 	}
 

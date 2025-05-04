@@ -1,4 +1,4 @@
-package iaudiab.maven.dependencytrack;
+package iabudiab.maven.plugins.dependencytrack;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -24,7 +24,6 @@ public class UtilsTest {
 
 	@Test
 	public void retry_tests() throws URISyntaxException {
-
 		{
 			Log log = Mockito.mock(Log.class);
 
