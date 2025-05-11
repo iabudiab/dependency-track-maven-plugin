@@ -76,7 +76,7 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 	/**
 	 * Path to a suppressions file containing suppression definitions to be applied before checking the security gate.
 	 */
-	@Parameter(property = "suppressions", defaultValue = "${project.basedir}/suppressions.json", required = false)
+	@Parameter(property = "suppressions", alias = "suppressionsFile", defaultValue = "${project.basedir}/suppressions.json", required = false)
 	private String suppressionsFile;
 
 	/**
