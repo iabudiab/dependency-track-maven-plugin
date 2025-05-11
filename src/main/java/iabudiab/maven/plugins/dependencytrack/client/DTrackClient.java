@@ -87,16 +87,16 @@ public class DTrackClient {
 		this.log = log;
 		this.logPayloads = false;
 
-		RequestConfig config = RequestConfig.custom() //
-			.setConnectTimeout(DEFAULT_TIMEOUT * 1000) //
-			.setConnectionRequestTimeout(DEFAULT_TIMEOUT * 1000) //
-			.setSocketTimeout(DEFAULT_TIMEOUT * 1000) //
+		RequestConfig config = RequestConfig.custom()
+			.setConnectTimeout(DEFAULT_TIMEOUT * 1000)
+			.setConnectionRequestTimeout(DEFAULT_TIMEOUT * 1000)
+			.setSocketTimeout(DEFAULT_TIMEOUT * 1000)
 			.build();
 
-		this.client = HttpClients.custom() //
-			.setDefaultRequestConfig(config) //
-			.setDefaultHeaders(apiHeaders()) //
-			.setRedirectStrategy(new LaxRedirectStrategy()) //
+		this.client = HttpClients.custom()
+			.setDefaultRequestConfig(config)
+			.setDefaultHeaders(apiHeaders())
+			.setRedirectStrategy(new LaxRedirectStrategy())
 			.build();
 		log.info("Using API v1 at: " + baseUri);
 	}
@@ -213,7 +213,7 @@ public class DTrackClient {
 		HttpPut request = httpPut(uri, payloadAsString);
 		log.info(String.format("Creating project '%s:%s' by: %s", payload.getName(), payload.getVersion(), uri));
 		Project response = client.execute(request, responseBodyHandler(Project.class));
-		log.info("successfully created project: " + response);
+		log.info("Successfully created project: " + response);
 		return response;
 	}
 
@@ -235,15 +235,21 @@ public class DTrackClient {
 		URI uri = baseUri.resolve(API_PROJECT + "/" + project.getUuid().toString());
 		String payloadAsString = objectMapper.writeValueAsString(payload);
 		HttpPatch request = httpPatch(uri, payloadAsString);
-		log.debug(String.format("Patching project '%s:%s' by applying payload: '%s'",
-			project.getName(), project.getVersion(), payloadAsString
-		));
+
+		if (log.isDebugEnabled()) {
+			log.debug(String.format("Patching project '%s:%s' by applying payload: '%s'",
+				project.getName(), project.getVersion(), payloadAsString
+			));
+		}
 
 		Project response = client.execute(request, responseBodyHandler(Project.class));
-		log.debug(String.format(
-			"Successfully patched project '%s:%s' by applying payload: '%s'",
-			project.getName(), project.getVersion(), payloadAsString
-		));
+
+		if (log.isDebugEnabled()) {
+			log.debug(String.format(
+				"Successfully patched project '%s:%s' by applying payload: '%s'",
+				project.getName(), project.getVersion(), payloadAsString
+			));
+		}
 		return response;
 	}
 
@@ -251,22 +257,31 @@ public class DTrackClient {
 		URI uri = baseUri.resolve(API_PROJECT);
 		String payloadAsString = objectMapper.writeValueAsString(project);
 		HttpPost request = httpPost(uri, payloadAsString);
-		log.debug(String.format("Posting project: '%s'",
-			payloadAsString
-		));
+
+		if (log.isDebugEnabled()) {
+			log.debug(String.format("Posting project: '%s'",
+				payloadAsString
+			));
+		}
 
 		Project response = client.execute(request, responseBodyHandler(Project.class));
-		log.debug(String.format(
-			"Successfully posted project: '%s'",
-			objectMapper.writeValueAsString(response)
-		));
+
+		if (log.isDebugEnabled()) {
+			log.debug(String.format(
+				"Successfully posted project: '%s'",
+				objectMapper.writeValueAsString(response)
+			));
+		}
 
 		return response;
 	}
 
 	public List<Finding> getProjectFindings(UUID projectId) throws IOException {
 		URI uri = baseUri.resolve(API_PROJECT_FINDINGS + projectId.toString() + "?suppressed=true");
-		log.debug("Invoking uri => " + uri);
+		if (log.isDebugEnabled()) {
+			log.debug("Invoking uri => " + uri);
+		}
+
 		HttpGet request = httpGet(uri);
 		Finding[] findings = client.execute(request, responseBodyHandler(Finding[].class));
 		return Arrays.asList(findings);
@@ -291,7 +306,10 @@ public class DTrackClient {
 
 	public ProjectMetrics getProjectMetrics(UUID projectId) throws IOException {
 		URI uri = baseUri.resolve(API_PROJECT_METRICS + projectId.toString() + "/current");
-		log.debug("Invoking uri => " + uri);
+		if (log.isDebugEnabled()) {
+			log.debug("Invoking uri => " + uri);
+		}
+
 		HttpGet request = httpGet(uri);
 		return client.execute(request, responseBodyHandler(ProjectMetrics.class));
 	}
