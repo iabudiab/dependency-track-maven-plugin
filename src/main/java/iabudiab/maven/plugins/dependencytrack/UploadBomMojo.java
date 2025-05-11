@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -15,9 +16,11 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
+import iabudiab.maven.plugins.dependencytrack.client.model.CollectionLogic;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
 import iabudiab.maven.plugins.dependencytrack.client.model.Project;
 import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
+import iabudiab.maven.plugins.dependencytrack.client.model.Tag;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
 import iabudiab.maven.plugins.dependencytrack.dtrack.DTrack;
 import iabudiab.maven.plugins.dependencytrack.dtrack.DTrackException;
@@ -117,6 +120,12 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	/**
 	 * The name of the parent project in Dependency-Track
 	 */
+	@Parameter(property = "parentIdentifier", defaultValue = "", required = false)
+	protected String parentIdentifier;
+
+	/**
+	 * The name of the parent project in Dependency-Track
+	 */
 	@Parameter(property = "parentName", defaultValue = "", required = false)
 	protected String parentName;
 
@@ -132,6 +141,30 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	@Parameter(property = "autCreateParent", defaultValue = "false", required = false)
 	private boolean autoCreateParent;
 
+	/**
+	 * The collection logic that should be applied to this project's autocreated parent in Dependency-Track, thus only takes effect when 'autoCreateParent' is set to 'true' and no such parent found
+	 */
+	@Parameter(property = "parentCollectionLogic", defaultValue = "", required = false)
+	protected String parentCollectionLogic;
+
+	/**
+	 * The collection logic that should be applied to this project's autocreated parent in Dependency-Track, thus only takes effect when 'autoCreateParent' is set to 'true' and no such parent found
+	 */
+	@Parameter(property = "parentCollectionTag", defaultValue = "", required = false)
+	protected String parentCollectionTag;
+
+	/**
+	 * The collection logic that should be applied to this project in Dependency-Track
+	 */
+	@Parameter(property = "collectionLogic", defaultValue = "", required = false)
+	protected String collectionLogic;
+
+	/**
+	 * The collection tag that should be applied to the project in Dependency-Track
+	 */
+	@Parameter(property = "collectionTag", defaultValue = "", required = false)
+	protected String collectionTag;
+
 
 	@Override
 	protected void logGoalConfiguration() {
@@ -141,22 +174,62 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		getLog().info("Reset expired suppressions      : " + resetExpiredSuppressions);
 		getLog().info("ProjectMetrics retry delay      : " + projectMetricsRetryDelay);
 		getLog().info("ProjectMetrics retry limit      : " + projectMetricsRetryLimit);
+		getLog().info("Parent identifier               : " + parentIdentifier);
 		getLog().info("Parent name                     : " + parentName);
 		getLog().info("Parent version                  : " + parentVersion);
 		getLog().info("Auto create parent              : " + autoCreateParent);
-
+		getLog().info("Parent's Collection logic       : " + parentCollectionLogic);
+		getLog().info("Parent's Collection tag         : " + parentCollectionTag);
+		getLog().info("Collection logic                : " + collectionLogic);
+		getLog().info("Collection tag                  : " + collectionTag);
 	}
 
 	@Override
 	protected void doWork(DTrack dtrack) throws DTrackException, MojoExecutionException {
 		Path path = Paths.get(artifactDirectory.getPath(), artifactName);
+		getLog().debug("start uploading bom ...");
 
-		TokenResponse tokenResponse = dtrack.uploadBom(path);
+		// even if the bom upload failed, we want to continue
+		TokenResponse tokenResponse = null;
+		try {
+			tokenResponse = dtrack.uploadBom(path);
+		} catch(DTrackException ex) {
+			getLog().warn("got exception when uploading bom!", ex);
+		}
 
-		if (!ObjectUtils.isEmpty(parentName) && !ObjectUtils.isEmpty(parentVersion)) {
-			applyParent(dtrack);
+		// try to apply parent to current project in dependency track
+		if ( !ObjectUtils.isEmpty(parentIdentifier) || (!ObjectUtils.isEmpty(parentName)) ) {
+			try {
+				getLog().debug(
+							parentIdentifier != null 
+							? String.format("try to apply parent by identifier '%s'", parentIdentifier)
+							: String.format("try to apply parent '%s:%s'", parentName, parentVersion));
+				applyParent(dtrack);
+				getLog().info(
+							parentIdentifier != null 
+							? String.format("successfully applied parent by identifier '%s'", parentIdentifier)
+							: String.format("successfully applied parent '%s:%s'", parentName, parentVersion));
+			} catch(Exception ex) {
+				getLog().warn(String.format("something went wrong applying parent!"), ex);
+			}
 		} else {
 			getLog().debug("No parent specified");
+		}
+
+		// try to apply collection logic to current project in dependency track
+		if( !ObjectUtils.isEmpty(collectionLogic) ) {
+			try {
+				getLog().debug(String.format("try to apply collection logic '%s'", collectionLogic));
+				applyCollectionLogic(dtrack);
+				getLog().info(String.format("successfully applied collection logic '%s'", collectionLogic));
+			} catch(Exception ex) {}
+		} else {
+			getLog().debug("No collection logic specified");
+		}
+
+		// when the bom upload failed, we want to stop execution here, since the further steps require a valid token response
+		if(tokenResponse == null) {
+			return;
 		}
 
 		try {
@@ -178,7 +251,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			getLog().info("Timeout while waiting for BOM token, bailing out.");
 			return;
 		}
-
+		
 		List<Finding> findings = dtrack.loadFindings();
 		FindingsReport findingsReport = new FindingsReport(findings);
 		getLog().info(InfoPrinter.print(findingsReport));
@@ -205,12 +278,22 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	}
 
 	private void applyParent(DTrack dtrack) {
+		getLog().debug(String.format("try to obtain current project"));
 		Project project = dtrack.findProject(projectName, projectVersion);
+
+		UUID parentUuid = null;
+		
+		try {
+			parentUuid = !ObjectUtils.isEmpty(parentIdentifier) ? UUID.fromString(parentIdentifier) : null;
+		} catch(IllegalArgumentException ex) {
+			getLog().warn(String.format("the given parent identifier '%s' could not be parsed to a valid UUID! Skip applying parent.", parentIdentifier), ex);
+			return;
+		}
 
 		// check if the desired parent is not already set
 		Project parentProject = project.getParent();
 
-		if (parentProject != null && parentName.equals(parentProject.getName()) && parentVersion.equals(parentProject.getVersion())) {
+		if (parentProject != null && ((parentUuid != null && parentUuid.equals(parentProject.getUuid())) || (parentName.equals(parentProject.getName()) && parentVersion.equals(parentProject.getVersion()))) ) {
 			getLog().info(String.format("The parent '%s:%s' is already assigned, so no need to apply it again",
 				parentProject.getName(), parentProject.getVersion()
 			));
@@ -218,9 +301,14 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		}
 
 		// try to obtain the parent project
-		parentProject = dtrack.findProject(parentName, parentVersion);
+		getLog().debug(String.format("try to obtain parent project either by identifier '%s' or by name and version '%s:%s'", parentUuid, parentName, parentVersion));
+		parentProject = parentUuid != null
+						? dtrack.findProject(parentUuid)
+						: dtrack.findProject(parentName, parentVersion);
 
-		if (parentProject == null) {
+		// autocreate should only be applied when parent project is specified by 'projectName' and 'projectVersion' and not by parent uuid
+		if (parentProject == null && parentUuid == null && autoCreateParent) {
+			// for debugging purposes we split the conditional statement into two
 			if (autoCreateParent) {
 				// if no such parent project found, create it
 				getLog().info(String.format(
@@ -228,7 +316,18 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 					parentName, parentVersion
 				));
 
-				parentProject = dtrack.createProject(parentName, parentVersion);
+				// parsing parent's collectionLogic
+				CollectionLogic logic = null;
+				try {
+					logic = CollectionLogic.valueOf(parentCollectionLogic);
+				} catch(Exception ex) {
+					getLog().warn(String.format("could not parse value '%s' to a valid collection logic strategy! Continue and handle it as 'null'", collectionLogic), ex);
+				}
+
+				// parsing parent's collectionTag
+				Tag tag = !ObjectUtils.isEmpty(parentCollectionTag) ? new Tag(parentCollectionTag) : null;
+
+				parentProject = dtrack.createProject(parentName, parentVersion, logic, tag);
 
 				getLog().info(String.format("Parent project '%s:%s' successfully created with uuid '%s'",
 					parentName, parentVersion, parentProject.getUuid()
@@ -242,9 +341,29 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		}
 
 		if (parentProject != null) {
+			getLog().debug(String.format("try to apply parent project"));
 			dtrack.applyParentProject(project, parentProject);
 		} else {
 			getLog().warn("Skip applying parent project");
+		}
+	}
+
+	private void applyCollectionLogic(DTrack dtrack) {
+		CollectionLogic logic = null;
+		try {
+			logic = CollectionLogic.valueOf(collectionLogic);
+		} catch(Exception ex) {
+			getLog().warn(String.format("could not parse value '%s' to a valid collection logic strategy! Skip applying collection logic.", collectionLogic), ex);
+			return;
+		}
+		String tag = (collectionTag == null || collectionTag.isEmpty()) ? null : collectionTag.trim();
+
+		Project project = dtrack.findProject(projectName, projectVersion);
+
+		try {
+			dtrack.applyCollectionLogic(project, logic, tag);
+		} catch (Exception ex) {
+			getLog().warn(String.format("something went wrong applying collection logic '%s' and tag '%s'!", logic, tag), ex);
 		}
 	}
 

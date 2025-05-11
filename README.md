@@ -203,9 +203,14 @@ Configuration:
 | `resetExpiredSuppressions`   | Whether to reset matching expired suppression or not                                | `true`                                                                        |
 | `cleanupSuppressions`        | Whether to generate a cleaned up suppressions file without unnecessary suppressions | `true`                                                                        |
 | `cleanupSuppressionsFile`    | The file path into which the suppressions will be written                           | `${project.build.directory}/dependency-track/suppressions.json `              |
+| `parentIdentifier`           | The unique identifier (UUID) of the parent project in Dependency-Track              | empty                                                                         |
 | `parentName`                 | The unique name of the parent project in Dependency-Track                           | empty                                                                         |
 | `parentVersion`              | The version of the parent project in Dependency-Track                               | empty                                                                         |
 | `autoCreateParent`           | Whether to create or not the specified parent project if no such project exists     | `false`                                                                       |
+| `parentCollectionLogic`      | The collection logic that should be applied to the created parent project           | empty                                                                         |
+| `parentCollectionTag`        | The collection tag that should be applied to the created parent project             | empty                                                                         |
+| `collectionLogic`            | The collection logic that should be applied to the current project                  | empty                                                                         |
+| `collectionTag`              | The collection tag that should be applied to the current project                    | empty                                                                         |
 
 ---
 

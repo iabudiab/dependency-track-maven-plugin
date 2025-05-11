@@ -8,7 +8,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -19,6 +19,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
@@ -29,6 +30,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.EntityBuilder;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -44,10 +46,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import iabudiab.maven.plugins.dependencytrack.client.model.Analysis;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
+import iabudiab.maven.plugins.dependencytrack.client.model.CollectionLogic;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
 import iabudiab.maven.plugins.dependencytrack.client.model.Project;
 import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
 import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
+import iabudiab.maven.plugins.dependencytrack.client.model.Tag;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenProcessedResponse;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
 import iabudiab.maven.plugins.dependencytrack.cyclone.BomFormat;
@@ -180,6 +184,12 @@ public class DTrackClient {
 			});
 	}
 
+	public Project getProject(UUID uuid) throws IOException {
+		URI uri = baseUri.resolve(API_PROJECT + "/" + uuid.toString());
+		HttpGet request = httpGet(uri);
+		return client.execute(request, responseBodyHandler(Project.class));
+	}
+
 	public Project getProject(String name) throws IOException {
 		URI uri = baseUri.resolve(API_PROJECT + "?name=" + name);
 		HttpGet request = httpGet(uri);
@@ -192,33 +202,65 @@ public class DTrackClient {
 		return client.execute(request, responseBodyHandler(Project.class));
 	}
 
-	public Project createProject(String name, String version) throws IOException {
+	public Project createProject(String name, String version, CollectionLogic collectionLogic, Tag collectionTag) throws IOException {
 		URI uri = baseUri.resolve(API_PROJECT);
 		Project payload = new Project();
 		payload.setName(name);
 		payload.setVersion(version);
+		payload.setCollectionLogic(collectionLogic == null ? CollectionLogic.NONE : collectionLogic);
+		payload.setCollectionTag(collectionTag);
 		String payloadAsString = objectMapper.writeValueAsString(payload);
 		HttpPut request = httpPut(uri, payloadAsString);
 		log.info(String.format("Creating project '%s:%s' by: %s", payload.getName(), payload.getVersion(), uri));
 		Project response = client.execute(request, responseBodyHandler(Project.class));
-		log.info("successfully created project uuid: " + response.getUuid());
+		log.info("successfully created project: " + response);
 		return response;
 	}
 
 	public Project applyProjectParent(Project project, Project parent) throws IOException {
+		// since there is a bug in DTrack v4.13.0 that resets the collectionLogic when PATCHing a project, we POSTing it instead
+		project.setParent(parent);
+		return postProject(project);
+	}
+
+	public Project applyCollectionLogic(Project project, CollectionLogic collectionLogic, String collectionTag) throws IOException {
+		if(collectionLogic == null) throw new IllegalArgumentException("collectionLogic should not be 'null'!");
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("collectionLogic", collectionLogic);
+		payload.put("collectionTag", !ObjectUtils.isEmpty(collectionTag) ? new Tag(collectionTag) : null);
+		return patchProject(project, payload);
+	}
+
+	public Project patchProject(Project project, Map<String, Object> payload) throws IOException {
 		URI uri = baseUri.resolve(API_PROJECT + "/" + project.getUuid().toString());
-		Map<String, Object> payload = Collections.singletonMap("parent", Collections.singletonMap("uuid", parent.getUuid().toString()));
 		String payloadAsString = objectMapper.writeValueAsString(payload);
 		HttpPatch request = httpPatch(uri, payloadAsString);
-		log.info(String.format("Patching project '%s:%s' to apply parent '%s:%s' by: %s",
-			project.getName(), project.getVersion(), parent.getName(), parent.getVersion(), uri
+		log.debug(String.format("Patching project '%s:%s' by applying payload: '%s'",
+			project.getName(), project.getVersion(), payloadAsString
 		));
 
 		Project response = client.execute(request, responseBodyHandler(Project.class));
-		log.info(String.format(
-			"Successfully patched project '%s:%s' by applying parent '%s:%s'",
-			project.getName(), project.getVersion(), parent.getName(), parent.getVersion()
+		log.debug(String.format(
+			"Successfully patched project '%s:%s' by applying payload: '%s'",
+			project.getName(), project.getVersion(), payloadAsString
 		));
+		return response;
+	}
+
+	public Project postProject(Project project) throws IOException {
+		URI uri = baseUri.resolve(API_PROJECT);
+		String payloadAsString = objectMapper.writeValueAsString(project);
+		HttpPost request = httpPost(uri, payloadAsString);
+		log.debug(String.format("Posting project: '%s'",
+			payloadAsString
+		));
+
+		Project response = client.execute(request, responseBodyHandler(Project.class));
+		log.debug(String.format(
+			"Successfully posted project: '%s'",
+			objectMapper.writeValueAsString(response)
+		));
+
 		return response;
 	}
 
@@ -328,6 +370,13 @@ public class DTrackClient {
 
 	private HttpPut httpPut(URI uri, String body) {
 		HttpPut request = new HttpPut();
+		request.setURI(uri);
+		request.setEntity(EntityBuilder.create().setText(body).build());
+		return request;
+	}
+
+	private HttpPost httpPost(URI uri, String body) {
+		HttpPost request = new HttpPost();
 		request.setURI(uri);
 		request.setEntity(EntityBuilder.create().setText(body).build());
 		return request;

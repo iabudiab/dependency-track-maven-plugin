@@ -19,11 +19,13 @@ import iabudiab.maven.plugins.dependencytrack.client.model.Analysis;
 import iabudiab.maven.plugins.dependencytrack.client.model.AnalysisJustification;
 import iabudiab.maven.plugins.dependencytrack.client.model.AnalysisResponse;
 import iabudiab.maven.plugins.dependencytrack.client.model.BomSubmitRequest;
+import iabudiab.maven.plugins.dependencytrack.client.model.CollectionLogic;
 import iabudiab.maven.plugins.dependencytrack.client.model.Finding;
 import iabudiab.maven.plugins.dependencytrack.client.model.Project;
 import iabudiab.maven.plugins.dependencytrack.client.model.ProjectMetrics;
 import iabudiab.maven.plugins.dependencytrack.client.model.ScanSubmitRequest;
 import iabudiab.maven.plugins.dependencytrack.client.model.State;
+import iabudiab.maven.plugins.dependencytrack.client.model.Tag;
 import iabudiab.maven.plugins.dependencytrack.client.model.TokenResponse;
 import iabudiab.maven.plugins.dependencytrack.cyclone.BomFormat;
 import iabudiab.maven.plugins.dependencytrack.suppressions.Suppression;
@@ -109,6 +111,17 @@ public class DTrack {
 		}
 	}
 
+	public Project findProject(UUID uuid) throws DTrackException {
+		try {
+			return client.getProject(uuid);
+		} catch (HttpResponseException e) {
+			if(e.getStatusCode() == 404) return null;
+			else throw handleCommonErrors(e);
+		} catch (IOException e) {
+			throw new DTrackException("Error loading project: ", e);
+		}
+	}
+
 	public Project findProject(String projectName, String projectVersion) throws DTrackException {
 		try {
 			return client.getProject(projectName, projectVersion);
@@ -128,8 +141,12 @@ public class DTrack {
 	}
 
 	public Project createProject(String projectName, String projectVersion) throws DTrackException {
+		return createProject(projectName, projectVersion, null, null);
+	}
+
+	public Project createProject(String projectName, String projectVersion, CollectionLogic collectionLogic, Tag collectionTag) throws DTrackException {
 		try {
-			return client.createProject(projectName, projectVersion);
+			return client.createProject(projectName, projectVersion, collectionLogic, collectionTag);
 		} catch (HttpResponseException e) {
 			throw handleCommonErrors(e);
 		} catch (IOException e) {
@@ -144,6 +161,16 @@ public class DTrack {
 			throw handleCommonErrors(e);
 		} catch (IOException e) {
 			throw new DTrackException("Error applying parent: ", e);
+		}
+	}
+
+	public Project applyCollectionLogic(Project project, CollectionLogic collectionLogic, String collectionTag) {
+		try {
+			return client.applyCollectionLogic(project, collectionLogic, collectionTag);
+		} catch (HttpResponseException e) {
+			throw handleCommonErrors(e);
+		} catch (IOException e) {
+			throw new DTrackException("Error applying collection logic: ", e);
 		}
 	}
 
@@ -267,11 +294,11 @@ public class DTrack {
 
 	private static DTrackException handleCommonErrors(HttpResponseException e) {
 		if (e.getStatusCode() == 400) {
-			return new DTrackNotFoundException("Error uploading scan: " + e.getReasonPhrase(), e);
+			return new DTrackNotFoundException("Bad request: " + e.getReasonPhrase(), e);
 		} else if (e.getStatusCode() == 401) {
 			return new DTrackUnauthenticatedException("Unauthenticated: ", e);
 		} else {
-			return new DTrackException("Error uploading scan: ", e);
+			return new DTrackException("unexpected response: ", e);
 		}
 	}
 }

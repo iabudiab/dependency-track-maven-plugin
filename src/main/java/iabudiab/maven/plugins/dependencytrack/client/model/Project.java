@@ -14,4 +14,12 @@ public class Project {
 	private String name;
 	private String version;
 	private Project parent;
+	private Classifier classifier;
+	private CollectionLogic collectionLogic;
+	private Tag collectionTag;
+
+	public Project() {
+		classifier = Classifier.NONE;
+		collectionLogic = CollectionLogic.NONE;
+	}
 }
