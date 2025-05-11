@@ -3,7 +3,6 @@ package iabudiab.maven.plugins.dependencytrack.dtrack;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 
@@ -15,7 +14,6 @@ import iabudiab.maven.plugins.dependencytrack.suppressions.Suppressions;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.logging.Log;
 
 @Data
 @AllArgsConstructor
@@ -25,16 +23,16 @@ public class SecurityReport {
 	private List<Finding> effectiveFindings;
 	private List<Suppression> effectiveSuppressions;
 
-	public void cleanupSuppressionsFile(Log log, String suppressionsFile) throws MojoExecutionException {
+	public void cleanupSuppressionsFile(Path targetSuppressionsFilePath) throws MojoExecutionException {
 		try {
-			Path targetSuppressionsFilePath = Paths.get(suppressionsFile);
 			Files.createDirectories(targetSuppressionsFilePath.getParent());
 
 			ObjectMapper objectMapper = new ObjectMapper();
 			objectMapper.registerModule(new JavaTimeModule());
 
-			byte[] filteredSuppressionsBytes =
-				objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(new Suppressions(effectiveSuppressions));
+			Suppressions suppressions = new Suppressions(effectiveSuppressions);
+			byte[] filteredSuppressionsBytes = objectMapper.writerWithDefaultPrettyPrinter()
+				.writeValueAsBytes(suppressions);
 
 			Files.write(
 				targetSuppressionsFilePath,
@@ -43,7 +41,6 @@ public class SecurityReport {
 				StandardOpenOption.TRUNCATE_EXISTING,
 				StandardOpenOption.WRITE
 			);
-			log.info("Effective suppressions have been written to: " + targetSuppressionsFilePath);
 		} catch (IOException e) {
 			throw new MojoExecutionException("Error writing suppressions: ", e);
 		}

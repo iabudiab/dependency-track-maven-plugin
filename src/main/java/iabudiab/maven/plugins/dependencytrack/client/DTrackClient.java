@@ -82,8 +82,8 @@ public class DTrackClient {
 	private boolean logPayloads;
 
 	public DTrackClient(String dependencyTrackUrl, String dependencyTrackApiKey, Log log) throws URISyntaxException {
-		this.dependencyTrackApiKey = dependencyTrackApiKey;
 		this.baseUri = new URI(dependencyTrackUrl).resolve(API_V1);
+		this.dependencyTrackApiKey = dependencyTrackApiKey;
 		this.log = log;
 		this.logPayloads = false;
 
@@ -98,6 +98,7 @@ public class DTrackClient {
 			.setDefaultHeaders(apiHeaders())
 			.setRedirectStrategy(new LaxRedirectStrategy())
 			.build();
+
 		log.info("Using API v1 at: " + baseUri);
 	}
 

@@ -61,20 +61,24 @@ public class FindingsThresholdSecurityGate implements SecurityGate {
 		for (Finding finding : findings) {
 			Suppression suppression = suppressions.suppressionFor(finding);
 
+			String purl = finding.getComponent().getPurl();
+			String vulnId = finding.getVulnerability().getVulnId();
+			Severity severity = finding.getVulnerability().getSeverity();
+
 			if (finding.getAnalysis().isSuppressed()) {
 				remainingSuppression.remove(suppression);
-				reportBuilder.append("- Finding is already suppressed in Dependency-Track for: [").append(finding.getComponent().getPurl()).append("]");
-				reportBuilder.append(" [cve: ").append(finding.getVulnerability().getVulnId()).append("]");
-				reportBuilder.append(" [severity: ").append(finding.getVulnerability().getSeverity()).append("]");
+				reportBuilder.append("- Finding is already suppressed in Dependency-Track for: [").append(purl).append("]");
+				reportBuilder.append(" [cve: ").append(vulnId).append("]");
+				reportBuilder.append(" [severity: ").append(severity).append("]");
 				reportBuilder.append("\n");
 				continue;
 			}
 
 			if (suppression == null) {
 				effectiveFindings.add(finding);
-				reportBuilder.append("- Active finding for: [").append(finding.getComponent().getPurl()).append("]");
-				reportBuilder.append(" [cve: ").append(finding.getVulnerability().getVulnId()).append("]");
-				reportBuilder.append(" [severity: ").append(finding.getVulnerability().getSeverity()).append("]");
+				reportBuilder.append("- Active finding for: [").append(purl).append("]");
+				reportBuilder.append(" [cve: ").append(vulnId).append("]");
+				reportBuilder.append(" [severity: ").append(severity).append("]");
 				reportBuilder.append("\n");
 				continue;
 			}
@@ -83,13 +87,13 @@ public class FindingsThresholdSecurityGate implements SecurityGate {
 
 			if (suppression.isExpired()) {
 				effectiveFindings.add(finding);
-				reportBuilder.append("- Active finding with expired custom suppression for: [").append(finding.getComponent().getPurl()).append("]");
+				reportBuilder.append("- Active finding with expired custom suppression for: [").append(purl).append("]");
 			} else {
-				reportBuilder.append("- Suppressed finding via custom suppression for: [").append(finding.getComponent().getPurl()).append("]");
+				reportBuilder.append("- Suppressed finding via custom suppression for: [").append(purl).append("]");
 			}
 
-			reportBuilder.append(" [cve: ").append(finding.getVulnerability().getVulnId()).append("]");
-			reportBuilder.append(" [severity: ").append(finding.getVulnerability().getSeverity()).append("]");
+			reportBuilder.append(" [cve: ").append(vulnId).append("]");
+			reportBuilder.append(" [severity: ").append(severity).append("]");
 
 			if (suppression.getNotes() != null) {
 				reportBuilder.append(" [notes: ").append(suppression.getNotes()).append("]");

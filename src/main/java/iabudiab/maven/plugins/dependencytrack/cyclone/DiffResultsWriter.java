@@ -46,28 +46,29 @@ public class DiffResultsWriter {
 		log.info("Component versions that have changed:");
 		log.info("");
 
-		if (diff.hasChanges()) {
-			for (Map.Entry<String, DiffItem<Component>> entry : diff.getComponentVersions().entrySet()) {
-				DiffItem<Component> item = entry.getValue();
-				if (!item.hasChanges()) {
-					continue;
-				}
-
-				for (Component component : item.getRemoved()) {
-					log.info(String.format("- %s %s @ %s", component.getGroup(), component.getName(), component.getVersion()));
-				}
-
-				for (Component component : item.getUnchanged()) {
-					log.info(String.format("= %s %s @ %s", component.getGroup(), component.getName(), component.getVersion()));
-				}
-
-				for (Component component : item.getAdded()) {
-					log.info(String.format("+ %s %s @ %s", component.getGroup(), component.getName(), component.getVersion()));
-				}
-				log.info("");
-			}
-		} else {
+		if (!diff.hasChanges()) {
 			log.info("None.");
+			return;
+		}
+
+		for (Map.Entry<String, DiffItem<Component>> entry : diff.getComponentVersions().entrySet()) {
+			DiffItem<Component> item = entry.getValue();
+			if (!item.hasChanges()) {
+				continue;
+			}
+
+			for (Component component : item.getRemoved()) {
+				log.info(String.format("- %s %s @ %s", component.getGroup(), component.getName(), component.getVersion()));
+			}
+
+			for (Component component : item.getUnchanged()) {
+				log.info(String.format("= %s %s @ %s", component.getGroup(), component.getName(), component.getVersion()));
+			}
+
+			for (Component component : item.getAdded()) {
+				log.info(String.format("+ %s %s @ %s", component.getGroup(), component.getName(), component.getVersion()));
+			}
+			log.info("");
 		}
 	}
 }

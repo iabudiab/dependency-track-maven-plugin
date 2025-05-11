@@ -251,15 +251,15 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 		if (cleanupSuppressions) {
 			getLog().info("Cleaning suppression file");
-			decision.getReport().cleanupSuppressionsFile(getLog(), cleanupSuppressionsFile);
+			Path cleanupSuppressionsFilePath = Paths.get(cleanupSuppressionsFile);
+			decision.getReport().cleanupSuppressionsFile(cleanupSuppressionsFilePath);
+			getLog().info("Effective suppressions have been written to: " + cleanupSuppressionsFilePath);
 		}
 	}
 
 	private void applyParent(DTrack dtrack) {
 		if (ObjectUtils.isEmpty(parentIdentifier) && (ObjectUtils.isEmpty(parentName))) {
-			if (getLog().isDebugEnabled()) {
-				getLog().debug("No parent specified");
-			}
+			getLog().debug("No parent specified");
 			return;
 		}
 

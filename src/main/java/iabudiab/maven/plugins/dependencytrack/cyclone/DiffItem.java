@@ -21,6 +21,6 @@ public class DiffItem<T> {
 	}
 
 	public boolean hasChanges() {
-		return added.size() > 0 || removed.size() > 0;
+		return !added.isEmpty() || !removed.isEmpty();
 	}
 }

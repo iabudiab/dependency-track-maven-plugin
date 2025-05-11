@@ -15,8 +15,8 @@ import org.apache.maven.plugin.logging.Log;
 public class CompletableFutureUtils {
 
 	private static final Executor POOL = ForkJoinPool.commonPool().getParallelism() > 1 //
-			? ForkJoinPool.commonPool() //
-			: runnable -> new Thread(runnable).start();
+		? ForkJoinPool.commonPool() //
+		: runnable -> new Thread(runnable).start();
 
 	public static Executor delayedExecutor(long delay, TimeUnit unit) {
 		return new DelayedExecutor(delay, unit, POOL);
@@ -44,10 +44,17 @@ public class CompletableFutureUtils {
 		}
 	}
 
-	public <R> CompletableFuture<R> retry(Supplier<R> supplier, Function<R, Boolean> retryCondition, int retryDelay, int retryCount, int retryLimit, Log log) {
-		if(retryCount > retryLimit) {
-			log.warn("Hit retry limit of '"+ retryLimit +"'!");
-			throw new CompletionException("Hit retry limit of '"+ retryLimit +"'", null);
+	public <R> CompletableFuture<R> retry(
+		Supplier<R> supplier,
+		Function<R, Boolean> retryCondition,
+		int retryDelay,
+		int retryCount,
+		int retryLimit,
+		Log log
+	) {
+		if (retryCount > retryLimit) {
+			log.warn("Hit retry limit of '" + retryLimit + "'!");
+			throw new CompletionException("Hit retry limit of '" + retryLimit + "'", null);
 		}
 
 		Executor executor = (retryCount == 0)
@@ -56,12 +63,12 @@ public class CompletableFutureUtils {
 
 		return CompletableFuture.supplyAsync(supplier, executor)
 			.thenCompose(result -> {
-				if(retryCondition.apply(result)) {
+				if (retryCondition.apply(result)) {
 					log.info("Retry condition met, so retrying after '" + retryDelay +
 						"' seconds (current retry count: '" + retryCount +
 						"'; max. retries: '" + retryLimit + "')");
 
-					return retry(supplier, retryCondition, retryDelay, retryCount+1, retryLimit, log);
+					return retry(supplier, retryCondition, retryDelay, retryCount + 1, retryLimit, log);
 				}
 				return CompletableFuture.completedFuture(result);
 			});

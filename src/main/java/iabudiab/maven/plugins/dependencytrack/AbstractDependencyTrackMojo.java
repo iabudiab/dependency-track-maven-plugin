@@ -103,7 +103,7 @@ public abstract class AbstractDependencyTrackMojo extends AbstractMojo {
 			client.setLogPayloads(logPayloads);
 
 			Suppressions suppressions = loadSuppressions();
-			DTrack dtrack = new DTrack(client, suppressions, projectName, projectVersion);
+			DTrack dtrack = new DTrack(client, suppressions, projectName, projectVersion, getLog());
 
 			doWork(dtrack);
 		} catch (URISyntaxException e) {
