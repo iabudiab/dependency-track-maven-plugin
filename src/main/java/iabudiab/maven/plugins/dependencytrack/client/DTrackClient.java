@@ -196,10 +196,17 @@ public class DTrackClient {
 	public Project getProject(String name) throws IOException {
 		URI uri = baseUri.resolve(API_PROJECT + "?name=" + URLEncoder.encode(name, StandardCharsets.UTF_8.name()));
 		HttpGet request = httpGet(uri);
-		return client.execute(request, responseBodyHandler(Project.class));
+		Project[] projects = client.execute(request, responseBodyHandler(Project[].class));
+
+		if(projects != null && projects.length > 0) return projects[0];
+		
+		return null;
 	}
 
 	public Project getProject(String name, String version) throws IOException {
+		// if no version is specified, delegate to finding project only by name
+		if(ObjectUtils.isEmpty(version)) return getProject(name);
+
 		URI uri = baseUri.resolve(API_PROJECT_LOOKUP + "?name=" + URLEncoder.encode(name, StandardCharsets.UTF_8.name()) + "&version=" + URLEncoder.encode(version, StandardCharsets.UTF_8.name()));
 		HttpGet request = httpGet(uri);
 		return client.execute(request, responseBodyHandler(Project.class));
