@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -192,13 +194,13 @@ public class DTrackClient {
 	}
 
 	public Project getProject(String name) throws IOException {
-		URI uri = baseUri.resolve(API_PROJECT + "?name=" + name);
+		URI uri = baseUri.resolve(API_PROJECT + "?name=" + URLEncoder.encode(name, StandardCharsets.UTF_8.name()));
 		HttpGet request = httpGet(uri);
 		return client.execute(request, responseBodyHandler(Project.class));
 	}
 
 	public Project getProject(String name, String version) throws IOException {
-		URI uri = baseUri.resolve(API_PROJECT_LOOKUP + "?name=" + name + "&version=" + version);
+		URI uri = baseUri.resolve(API_PROJECT_LOOKUP + "?name=" + URLEncoder.encode(name, StandardCharsets.UTF_8.name()) + "&version=" + URLEncoder.encode(version, StandardCharsets.UTF_8.name()));
 		HttpGet request = httpGet(uri);
 		return client.execute(request, responseBodyHandler(Project.class));
 	}
