@@ -100,7 +100,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	protected boolean uploadMatchingSuppressions;
 
 	/**
-	 * Whether matching local suppressions for actual findings, that are expired, should be reset in dependency track.
+	 * Whether matching local suppressions for actual findings, that are expired, should be reset in Dependency-Track.
 	 */
 	@Parameter(property = "resetExpiredSuppressions", defaultValue = "true", required = false)
 	protected boolean resetExpiredSuppressions;
@@ -142,13 +142,13 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	private boolean autoCreateParent;
 
 	/**
-	 * The collection logic that should be applied to this project's autocreated parent in Dependency-Track, thus only takes effect when 'autoCreateParent' is set to 'true' and no such parent found
+	 * The collection logic that should be applied to this project's auto-created parent in Dependency-Track, thus only takes effect when 'autoCreateParent' is set to 'true' and no such parent found
 	 */
 	@Parameter(property = "parentCollectionLogic", defaultValue = "", required = false)
 	protected String parentCollectionLogic;
 
 	/**
-	 * The collection logic that should be applied to this project's autocreated parent in Dependency-Track, thus only takes effect when 'autoCreateParent' is set to 'true' and no such parent found
+	 * The collection logic tag that should be applied to this project's auto-created parent in Dependency-Track, thus only takes effect when 'autoCreateParent' is set to 'true' and no such parent found
 	 */
 	@Parameter(property = "parentCollectionTag", defaultValue = "", required = false)
 	protected String parentCollectionTag;
@@ -295,11 +295,10 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 		if (parentProject != null) {
 			boolean sameParentUuid = (parentUuid != null && parentUuid.equals(parentProject.getUuid()));
-			boolean sameParentNameAndVersion =
-				(parentName != null && parentName.equals(parentProject.getName())) &&
-				(parentVersion == null || parentVersion.equals(parentProject.getVersion()));
+			boolean sameParentName = (parentName != null && parentName.equals(parentProject.getName()));
+			boolean sameParentVersion = (parentVersion == null || parentVersion.equals(parentProject.getVersion()));
 
-			if (sameParentUuid || sameParentNameAndVersion) {
+			if (sameParentUuid || (sameParentName && sameParentVersion)) {
 				getLog().info(String.format("The parent '%s:%s' is already assigned, so no need to apply it again",
 					parentProject.getName(), parentProject.getVersion()
 				));
@@ -319,7 +318,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			? dtrack.findProject(parentUuid)
 			: dtrack.findProject(parentName, parentVersion);
 
-		// Auto-create should only be applied when parent project is specified by 'projectName' and 'projectVersion' and not by parent uuid
+		// Auto-create should only be applied when the parent project is specified by 'projectName' and 'projectVersion' and not by parent uuid
 		if (parentProject == null && parentUuid == null) {
 			// for debugging purposes we split the conditional statement into two
 			if (autoCreateParent) {
@@ -380,7 +379,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			getLog().debug(String.format("Try to apply collection logic '%s'", collectionLogic));
 		}
 
-		CollectionLogic logic = null;
+		CollectionLogic logic;
 		try {
 			logic = CollectionLogic.valueOf(collectionLogic);
 		} catch (Exception ex) {
@@ -391,7 +390,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		}
 		String tag = (collectionTag == null || collectionTag.isEmpty()) ? null : collectionTag.trim();
 
-		Project project = null;
+		Project project;
 		try {
 			if (getLog().isDebugEnabled()) {
 				getLog().debug("Try to obtain current project");

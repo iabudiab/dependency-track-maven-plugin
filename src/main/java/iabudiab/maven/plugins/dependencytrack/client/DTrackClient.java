@@ -198,16 +198,27 @@ public class DTrackClient {
 		HttpGet request = httpGet(uri);
 		Project[] projects = client.execute(request, responseBodyHandler(Project[].class));
 
-		if(projects != null && projects.length > 0) return projects[0];
-		
+		if (projects != null && projects.length > 0) {
+			// Maybe we should sort the projects somehow. The most intuitive sort would be by version.
+			// However, we can't make any assumptions about how projects are versioned.
+			// Revisit when this becomes more relevant.
+			return projects[0];
+		}
+
 		return null;
 	}
 
 	public Project getProject(String name, String version) throws IOException {
-		// if no version is specified, delegate to finding project only by name
-		if(ObjectUtils.isEmpty(version)) return getProject(name);
+		// if no version is specified, delegate to finding a project only by name
+		if (ObjectUtils.isEmpty(version)) {
+			return getProject(name);
+		}
 
-		URI uri = baseUri.resolve(API_PROJECT_LOOKUP + "?name=" + URLEncoder.encode(name, StandardCharsets.UTF_8.name()) + "&version=" + URLEncoder.encode(version, StandardCharsets.UTF_8.name()));
+		URI uri = baseUri.resolve(
+			API_PROJECT_LOOKUP
+				+ "?name=" + URLEncoder.encode(name, StandardCharsets.UTF_8.name())
+				+ "&version=" + URLEncoder.encode(version, StandardCharsets.UTF_8.name())
+		);
 		HttpGet request = httpGet(uri);
 		return client.execute(request, responseBodyHandler(Project.class));
 	}
@@ -234,7 +245,7 @@ public class DTrackClient {
 	}
 
 	public Project applyCollectionLogic(Project project, CollectionLogic collectionLogic, String collectionTag) throws IOException {
-		if(collectionLogic == null) throw new IllegalArgumentException("collectionLogic should not be 'null'!");
+		if (collectionLogic == null) throw new IllegalArgumentException("collectionLogic should not be 'null'!");
 		Map<String, Object> payload = new HashMap<>();
 		payload.put("collectionLogic", collectionLogic);
 		payload.put("collectionTag", !ObjectUtils.isEmpty(collectionTag) ? new Tag(collectionTag) : null);
@@ -298,8 +309,13 @@ public class DTrackClient {
 	}
 
 	public ProjectMetrics getProjectMetrics(UUID projectId, int retryDelay, int retryLimit) throws IOException {
-		if (retryLimit <= 0) return getProjectMetrics(projectId);
-		if (retryDelay < 0) throw new IllegalArgumentException("Project metrics retry delay must be >= 0");
+		if (retryLimit <= 0) {
+			return getProjectMetrics(projectId);
+		}
+
+		if (retryDelay < 0) {
+			throw new IllegalArgumentException("Project metrics retry delay must be >= 0");
+		}
 
 		Supplier<ProjectMetrics> projectMetricsSupplier = () -> {
 			ProjectMetrics metrics = null;
