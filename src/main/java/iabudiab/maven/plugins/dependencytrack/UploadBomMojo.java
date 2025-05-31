@@ -297,7 +297,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			boolean sameParentUuid = (parentUuid != null && parentUuid.equals(parentProject.getUuid()));
 			boolean sameParentNameAndVersion =
 				(parentName != null && parentName.equals(parentProject.getName())) &&
-				(parentVersion != null && parentVersion.equals(parentProject.getVersion()));
+				(parentVersion == null || parentVersion.equals(parentProject.getVersion()));
 
 			if (sameParentUuid || sameParentNameAndVersion) {
 				getLog().info(String.format("The parent '%s:%s' is already assigned, so no need to apply it again",
