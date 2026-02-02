@@ -156,13 +156,20 @@ Configuration:
 
 Uploads a CycloneDX or SPDX BOM to Dependency-Track. A project is created in Dependency-Track if it doesn't already exist.
 
-If both, `parentName` and `parentVersion` are specified (not empty), the appropriate parent project will be applied as a parent to the target project. If `autoCreateParent` is set to `true` and no matching parent project found in Dependency-Track, an appropriate parent project will be created first, otherwise the assigned parent project will be left as is. 
+If either `parentIdentifier` or both of `parentName` and `parentVersion` are specified (not empty), the appropriate parent project will be applied as a parent to the target project. If `autoCreateParent` is set to `true` and no matching parent project found in Dependency-Track, an appropriate parent project will be created first, otherwise the assigned parent project will be left as is. 
 
 Upon uploading a BOM to Dependency-Track a token is returned, which can be checked for processing status if `pollToken` is `true`.
 
 If `pollToken` is set to `false`, then this goal would upload the BOM, optionally assign the specified parent project, write the token to a file at `tokenFile` and then exit.
 
 Once the token is processed, the findings are available and can be fetched for further analysis.
+
+If `setOlderVersionsInactive` is set to `true` older versions (those that are lower than or equal) of this project will be set to `inactive` in Dependency-Track. To identify 'older' versions a three numbered version scheme (`[major-version].[minor-version].[patch-version]`, e.g. 3.11.8 or 1.2 or 2) is assumed and will be checked with an appropriate regex. If the version does not match that scheme, the corresponsing project version will be skipped. Here Older versions means all versions that have
+1. major-version less than current major-version or equal and
+2. minor-version less than current minor-version or equal and
+3. patch-version less than current patch-version
+
+When `ignoreVersionSuffixes` is set to true all suffixes to prior defined versioning scheme will be ignored when it comes to comparing the other projects version to the curent one. As a result, all versions with the same base versions will be set to "inactive", e.g. If we are releasing a version 1.2.3 all versions like 1.2.3-SNAPSHOT or 1.2.3-beta.2 will be set to "inactive" as well as all lower versions like 1.2.1 or 1.2 and so on.
 
 This goal polls Dependency-Track for `tokenPollingDuration`, which defaults to `60` seconds, then prints a findings report. The findings can be matched against a `security gate` in order to fail the build, which can be configured as follows:
 
@@ -211,6 +218,8 @@ Configuration:
 | `parentCollectionTag`        | The collection tag that should be applied to the created parent project             | empty                                                                         |
 | `collectionLogic`            | The collection logic that should be applied to the current project                  | empty                                                                         |
 | `collectionTag`              | The collection tag that should be applied to the current project                    | empty                                                                         |
+| `setOlderVersionsInactive`   | Whether or not set older versions of this project to 'inactive' in Dependency-Track | `false`                                                                       |
+| `ignoreVersionSuffixes`      | Whether or not ignore version suffixes when identifying old versions                | `true`                                                                        |
 
 ---
 
