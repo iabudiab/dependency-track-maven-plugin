@@ -165,6 +165,12 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	@Parameter(property = "collectionTag", defaultValue = "", required = false)
 	protected String collectionTag;
 
+	/**
+	 * Whether the uploading project should be marked as latest in Dependency-Track
+	 */
+	@Parameter(property = "markAsLatest", defaultValue = "false", required = false)
+	private boolean markAsLatest;
+
 
 	@Override
 	protected void logGoalConfiguration() {
@@ -182,6 +188,8 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		getLog().info("Parent's Collection tag         : " + parentCollectionTag);
 		getLog().info("Collection logic                : " + collectionLogic);
 		getLog().info("Collection tag                  : " + collectionTag);
+		getLog().info("Mark as latest                  : " + markAsLatest);
+
 	}
 
 	@Override
@@ -204,6 +212,9 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 		// Try to apply collection logic to current project in dependency track
 		applyCollectionLogic(dtrack);
+
+		// if enabled, mark the uploaded project as latest
+		applyLatest(dtrack);
 
 		// When the bom upload failed, we want to stop execution here, since the further steps require a valid token response
 		if (tokenResponse == null) {
@@ -410,6 +421,39 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		}
 
 		getLog().info(String.format("Successfully applied collection logic '%s'", collectionLogic));
+	}
+
+
+	private void applyLatest(DTrack dtrack) {
+		if(!markAsLatest) {
+			if(getLog().isDebugEnabled()) {
+				getLog().debug("'markAsLatest' is set to 'false', so skipping.");
+			}
+			return;
+		}
+
+		if (getLog().isDebugEnabled()) {
+			getLog().debug("Try to mark uploaded project as latest");
+		}
+
+		Project project = null;
+		try {
+			if (getLog().isDebugEnabled()) {
+				getLog().debug("Try to obtain current project");
+			}
+			project = dtrack.findProject(projectName, projectVersion);
+		} catch (Exception ex) {
+			getLog().warn("Something went wrong loading project!", ex);
+			return;
+		}
+
+		try {
+			dtrack.applyLatest(project, true);
+		} catch (Exception ex) {
+			getLog().warn("Something went wrong applying latest = 'true'!", ex);
+		}
+
+		getLog().info("Successfully marked uploaded project as latest!");
 	}
 
 	private void writeToPath(TokenResponse token, Path path) throws IOException {

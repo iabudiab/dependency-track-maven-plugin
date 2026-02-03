@@ -17,9 +17,11 @@ public class Project {
 	private Classifier classifier;
 	private CollectionLogic collectionLogic;
 	private Tag collectionTag;
+	private Boolean isLatest;
 
 	public Project() {
 		classifier = Classifier.NONE;
 		collectionLogic = CollectionLogic.NONE;
+		isLatest = false;
 	}
 }
