@@ -16,6 +16,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -446,118 +447,120 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 
 	private void setOlderVersionsInactive(DTrack dtrack) {
 		// check if enabled
+		Log log = getLog();
 		if(!setOlderVersionsInactive) {
-			if (getLog().isDebugEnabled()) {
-				getLog().debug("'setOlderVersionsInactive' is set to '"+ setOlderVersionsInactive +"', so nothing to do here!");
+			if (log.isDebugEnabled()) {
+				log.debug("'setOlderVersionsInactive' is set to '" + setOlderVersionsInactive + "', so nothing to do here!");
 			}
 			return;
 		}
-		
+
 		// parse current version
 		Triple<Integer, Integer, Integer> currentVersion = null;
 		try {
 			currentVersion = VersionUtil.parseVersionString(projectVersion, ignoreVersionSuffixes);
 		} catch(Exception e) {
-			getLog().warn(String.format(
-						"could not parse version string '%s'! Skip setting older versions inactive! Reason: %s",
-						projectVersion,
-						e.getMessage()
-					), e
-				);
+			log.warn(
+				String.format("could not parse version string '%s'! Skip setting older versions inactive! Reason: %s",
+					projectVersion, e.getMessage()), e
+			);
 			return;
 		}
 
 		// find current project with the list of other versions
+		Project project = null;
+		try {
+			if (log.isDebugEnabled()) {
+				log.debug("Try to obtain current project");
+			}
+			project = dtrack.findProject(projectName, projectVersion);
+		} catch (Exception ex) {
+			log.warn("Something went wrong loading project!", ex);
+			return;
+		}
 		UUID currentUuid = project.getUuid();
 
 		// check if there are other versions
 		if(project.getVersions() == null || project.getVersions().isEmpty()) {
-			if(getLog().isInfoEnabled()) {
-				getLog().info(String.format(
-							"no other versions found for project '%s:%s', so there is nothing to be set to inactive.",
-							projectName,
-							projectVersion
-						));
+			if(log.isInfoEnabled()) {
+				log.info(String.format(
+					"no other versions found for project '%s:%s', so there is nothing to be set to inactive.",
+					projectName, projectVersion
+				));
 			}
 			return;
 		}
-	
+
 		// filter list of other versions for those that are active and are not the same as the current project
 		List<ProjectVersion> activeOtherProjectVersions = project.getVersions().stream()
-				.filter(pv -> !Objects.equals(currentUuid, pv.getUuid())
-						&& !StringUtils.equals(projectVersion, pv.getVersion()) 
-						&& pv.getActive() == true
-				)
-				.collect(Collectors.toList());
+			.filter(pv -> !Objects.equals(currentUuid, pv.getUuid())
+				&& !StringUtils.equals(projectVersion, pv.getVersion())
+				&& pv.getActive() == true
+			)
+			.collect(Collectors.toList());
 
 		// check if there are other active versions
 		if(activeOtherProjectVersions == null || activeOtherProjectVersions.isEmpty()) {
-			if(getLog().isInfoEnabled()) {
-				getLog().info(String.format(
-							"no other active versions found for project '%s:%s', so there is nothing to be set to inactive.",
-							projectName,
-							projectVersion
-						));
+			if(log.isInfoEnabled()) {
+				log.info(String.format(
+					"no other active versions found for project '%s:%s', so there is nothing to be set to inactive.",
+					projectName, projectVersion
+				));
 			}
 			return;
 		}
 
-		if(getLog().isDebugEnabled()) {
-			getLog().debug(String.format("found the following other versions of this project (%s:%s): %s", projectName, projectVersion, activeOtherProjectVersions));
+		if(log.isDebugEnabled()) {
+			log.debug(String.format(
+				"found the following other versions of this project (%s:%s): %s",
+				projectName, projectVersion, activeOtherProjectVersions
+			));
 		}
 
 		// run over all remaining active project versions ...
 		for(ProjectVersion otherProjectVersion : activeOtherProjectVersions) {
-
 			// parse the version string into the three values
 			Triple<Integer, Integer, Integer> otherVersion = null;
 			try {
 				otherVersion = VersionUtil.parseVersionString(otherProjectVersion.getVersion(), ignoreVersionSuffixes);
 			} catch(Exception e) {
-				getLog().warn(String.format(
-							"could not parse version string '%s'! Reason: %s",
-							otherProjectVersion.getVersion(),
-							e.getMessage()
-						), e
-					);
+				log.warn(String.format(
+					"could not parse version string '%s'! Reason: %s",
+						otherProjectVersion.getVersion(), e.getMessage()
+				), e);
 				continue;
 			}
 
 			// if the other projects version is lower or equal (for those versions, that got cleaned) compared to current version
 			if(otherVersion.compareTo(currentVersion) <= 0) {
-				if(getLog().isInfoEnabled()) {
-					getLog().info(String.format(
-							"found project version %s (UUID: %s) to be older than current version %s! Patching it to 'active=false'",
-							otherProjectVersion.getVersion(),
-							otherProjectVersion.getUuid(),
-							projectVersion
-						));
+				if(log.isInfoEnabled()) {
+					log.info(String.format(
+						"found project version %s (UUID: %s) to be older than current version %s! Patching it to 'active=false'",
+						otherProjectVersion.getVersion(), otherProjectVersion.getUuid(), projectVersion
+					));
 				}
 				// patch the other project to inactive
 				Project patchedProject = dtrack.applyActive(
-						otherProjectVersion.getUuid(), 
-						false,
-						// as long we have to patch collectionLogic and collectionTag alongside,
-						// we assume that the other versions have applied the same as the current one
-						project.getCollectionLogic(), 
-						project.getCollectionTag()
-					);
-				if(getLog().isDebugEnabled()) {
-					getLog().debug(String.format(
-							"successfully applied 'active=false' to project version %s (UUID: %s) that found to be older than current version!",
-							patchedProject.getVersion(),
-							patchedProject.getUuid()
-						));
+					otherProjectVersion.getUuid(),
+					false,
+					// as long we have to patch collectionLogic and collectionTag alongside,
+					// we assume that the other versions have applied the same as the current one
+					project.getCollectionLogic(),
+					project.getCollectionTag()
+				);
+				if(log.isDebugEnabled()) {
+					log.debug(String.format(
+						"successfully applied 'active=false' to project version %s (UUID: %s) that found to be older than current version!",
+						patchedProject.getVersion(), patchedProject.getUuid()
+					));
 				}
 			}
 			else {
-				if (getLog().isDebugEnabled()) {
-					getLog().info(String.format(
-							"project version %s (UUID: %s) is not older than current version %s! So nothing to do here.",
-							otherProjectVersion.getVersion(),
-							otherProjectVersion.getUuid(),
-							projectVersion
-						));
+				if (log.isDebugEnabled()) {
+					log.info(String.format(
+						"project version %s (UUID: %s) is not older than current version %s! So nothing to do here.",
+						otherProjectVersion.getVersion(), otherProjectVersion.getUuid(), projectVersion
+					));
 				}
 			}
 		}
@@ -569,7 +572,6 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 				getLog().debug("'markAsLatest' is set to 'false', so skipping.");
 			}
 		}
-
 
 		if (getLog().isDebugEnabled()) {
 			getLog().debug("Try to mark uploaded project as latest");
