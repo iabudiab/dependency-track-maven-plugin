@@ -258,6 +258,19 @@ public class DTrackClient {
 		return patchProject(project, payload);
 	}
 
+	public Project patchProjectActive(UUID projectUuid, boolean active, CollectionLogic collectionLogic, Tag collectionTag) throws IOException {
+		Map<String, Object> payload = new HashMap<>();
+		
+		// TODO: remove, when the bug is fixed in dependency track api!
+		// due to a bug in dependency track, patching a project would reset the applied collectionLogic and collectionTags!
+		// so as a workaround we require to patch those values also!
+		payload.put("collectionLogic", collectionLogic);
+		payload.put("collectionTag", collectionTag);
+
+		payload.put("active", active);
+		return patchProject(projectUuid, payload);
+	}
+	
 	public Project applyLatest(Project project, boolean latest) throws IOException {
 		Map<String, Object> payload = new HashMap<>();
 
@@ -272,13 +285,17 @@ public class DTrackClient {
 	}
 
 	public Project patchProject(Project project, Map<String, Object> payload) throws IOException {
-		URI uri = baseUri.resolve(API_PROJECT + "/" + project.getUuid().toString());
+		return patchProject(project.getUuid(), payload);
+	}
+
+	public Project patchProject(UUID projectUuid, Map<String, Object> payload) throws IOException {
+		URI uri = baseUri.resolve(API_PROJECT + "/" + projectUuid.toString());
 		String payloadAsString = objectMapper.writeValueAsString(payload);
 		HttpPatch request = httpPatch(uri, payloadAsString);
 
 		if (log.isDebugEnabled()) {
-			log.debug(String.format("Patching project '%s:%s' by applying payload: '%s'",
-				project.getName(), project.getVersion(), payloadAsString
+			log.debug(String.format("Patching project '%s' by applying payload: '%s'",
+				projectUuid.toString(), payloadAsString
 			));
 		}
 
@@ -287,11 +304,12 @@ public class DTrackClient {
 		if (log.isDebugEnabled()) {
 			log.debug(String.format(
 				"Successfully patched project '%s:%s' by applying payload: '%s'",
-				project.getName(), project.getVersion(), payloadAsString
+				response.getName(), response.getVersion(), payloadAsString
 			));
 		}
 		return response;
 	}
+
 
 	public Project postProject(Project project) throws IOException {
 		URI uri = baseUri.resolve(API_PROJECT);

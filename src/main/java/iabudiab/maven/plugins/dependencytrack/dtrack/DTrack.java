@@ -366,6 +366,21 @@ public class DTrack {
 		}
 	}
 
+	public Project applyActive(UUID projectUuid, boolean active, CollectionLogic collectionLogic, Tag collectionTag) {
+		try {
+			Project updatedProject = client.patchProjectActive(projectUuid, active, collectionLogic, collectionTag);
+			log.info(String.format("Successfully applied active='%s' to project (uuid='%s')", active, projectUuid));
+			return updatedProject;
+		} catch (HttpResponseException e) {
+			log.error(String.format("Failed to apply active='%s' to project (uuid='%s'): %s", active, projectUuid, e.getMessage()), e);
+			throw handleCommonErrors(e);
+		} catch (IOException e) {
+			log.error(String.format("Failed to apply active='%s' to project (uuid='%s'): %s", active, projectUuid, e.getMessage()), e);
+			throw new DTrackException("Error applying active='"+ active +"' to project (uuid='"+ projectUuid +"')!", e);
+		}
+	}
+
+
 	/**
 	 * Applies given latest value to a project in Dependency-Track.
 	 *
