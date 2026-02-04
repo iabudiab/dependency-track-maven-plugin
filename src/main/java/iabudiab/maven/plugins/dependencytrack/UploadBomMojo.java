@@ -182,6 +182,12 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 	 */
 	@Parameter(property = "ignoreVersionSuffixes", defaultValue = "true", required = false)
 	protected boolean ignoreVersionSuffixes;
+	
+	/**
+	 * Whether the uploading project should be marked as latest in Dependency-Track
+	 */
+	@Parameter(property = "markAsLatest", defaultValue = "false", required = false)
+	private boolean markAsLatest;
 
 
 	@Override
@@ -202,6 +208,8 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		getLog().info("Collection tag                  : " + collectionTag);
 		getLog().info("Set older versions insactive    : " + setOlderVersionsInactive);
 		getLog().info("ignore Version Suffixes         : " + ignoreVersionSuffixes);
+		getLog().info("Mark as latest                  : " + markAsLatest);
+
 	}
 
 	@Override
@@ -226,6 +234,8 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		applyCollectionLogic(dtrack);
 
 		setOlderVersionsInactive(dtrack);
+		// if enabled, mark the uploaded project as latest
+		applyLatest(dtrack);
 
 		// When the bom upload failed, we want to stop execution here, since the further steps require a valid token response
 		if (tokenResponse == null) {
@@ -442,7 +452,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			}
 			return;
 		}
-
+		
 		// parse current version
 		Triple<Integer, Integer, Integer> currentVersion = null;
 		try {
@@ -458,16 +468,6 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		}
 
 		// find current project with the list of other versions
-		Project project = null;
-		try {
-			if (getLog().isDebugEnabled()) {
-				getLog().debug("Try to obtain current project");
-			}
-			project = dtrack.findProject(projectName, projectVersion);
-		} catch (Exception ex) {
-			getLog().warn("Something went wrong loading project!", ex);
-			return;
-		}
 		UUID currentUuid = project.getUuid();
 
 		// check if there are other versions
@@ -481,7 +481,7 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 			}
 			return;
 		}
-
+	
 		// filter list of other versions for those that are active and are not the same as the current project
 		List<ProjectVersion> activeOtherProjectVersions = project.getVersions().stream()
 				.filter(pv -> !Objects.equals(currentUuid, pv.getUuid())
@@ -563,10 +563,37 @@ public class UploadBomMojo extends AbstractDependencyTrackMojo {
 		}
 	}
 
-	
+	private void applyLatest(DTrack dtrack) {
+		if(!markAsLatest) {
+			if(getLog().isDebugEnabled()) {
+				getLog().debug("'markAsLatest' is set to 'false', so skipping.");
+			}
+		}
 
 
+		if (getLog().isDebugEnabled()) {
+			getLog().debug("Try to mark uploaded project as latest");
+		}
 
+		Project project = null;
+		try {
+			if (getLog().isDebugEnabled()) {
+				getLog().debug("Try to obtain current project");
+			}
+			project = dtrack.findProject(projectName, projectVersion);
+		} catch (Exception ex) {
+			getLog().warn("Something went wrong loading project!", ex);
+			return;
+		}	
+
+		try {
+			dtrack.applyLatest(project, true);
+		} catch (Exception ex) {
+			getLog().warn("Something went wrong applying latest = 'true'!", ex);
+		}
+
+		getLog().info("Successfully marked uploaded project as latest!");
+	}
 
 	private void writeToPath(TokenResponse token, Path path) throws IOException {
 		Files.createDirectories(path.getParent());

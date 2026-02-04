@@ -239,7 +239,7 @@ public class DTrackClient {
 	}
 
 	public Project applyProjectParent(Project project, Project parent) throws IOException {
-		// since there is a bug in DTrack v4.13.0 that resets the collectionLogic when PATCHing a project, we POSTing it instead
+		// since there is a bug in DTrack v4.13.0 that resets the collectionLogic and isLatest when PATCHing a project, we POSTing it instead
 		project.setParent(parent);
 		return postProject(project);
 	}
@@ -247,6 +247,12 @@ public class DTrackClient {
 	public Project applyCollectionLogic(Project project, CollectionLogic collectionLogic, String collectionTag) throws IOException {
 		if (collectionLogic == null) throw new IllegalArgumentException("collectionLogic should not be 'null'!");
 		Map<String, Object> payload = new HashMap<>();
+
+		// TODO: remove, when the bug is fixed in dependency track api!
+		// due to a bug in dependency track, patching a project would reset the applied isLatest value
+		// so as a workaround we require to patch this value also!
+		payload.put("isLatest", project.getIsLatest());
+
 		payload.put("collectionLogic", collectionLogic);
 		payload.put("collectionTag", !ObjectUtils.isEmpty(collectionTag) ? new Tag(collectionTag) : null);
 		return patchProject(project, payload);
@@ -254,7 +260,7 @@ public class DTrackClient {
 
 	public Project patchProjectActive(UUID projectUuid, boolean active, CollectionLogic collectionLogic, Tag collectionTag) throws IOException {
 		Map<String, Object> payload = new HashMap<>();
-
+		
 		// TODO: remove, when the bug is fixed in dependency track api!
 		// due to a bug in dependency track, patching a project would reset the applied collectionLogic and collectionTags!
 		// so as a workaround we require to patch those values also!
@@ -264,11 +270,23 @@ public class DTrackClient {
 		payload.put("active", active);
 		return patchProject(projectUuid, payload);
 	}
+	
+	public Project applyLatest(Project project, boolean latest) throws IOException {
+		Map<String, Object> payload = new HashMap<>();
+
+		// TODO: remove, when the bug is fixed in dependency track api!
+		// due to a bug in dependency track, patching a project would reset the applied collectionLogic and collectionTags!
+		// so as a workaround we require to patch those values also!
+		payload.put("collectionLogic", project.getCollectionLogic());
+		payload.put("collectionTag", project.getCollectionTag());
+
+		payload.put("isLatest", latest);
+		return patchProject(project, payload);
+	}
 
 	public Project patchProject(Project project, Map<String, Object> payload) throws IOException {
 		return patchProject(project.getUuid(), payload);
 	}
-
 
 	public Project patchProject(UUID projectUuid, Map<String, Object> payload) throws IOException {
 		URI uri = baseUri.resolve(API_PROJECT + "/" + projectUuid.toString());
