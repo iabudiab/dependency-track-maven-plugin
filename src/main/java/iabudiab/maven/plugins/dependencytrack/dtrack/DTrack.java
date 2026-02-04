@@ -367,6 +367,29 @@ public class DTrack {
 	}
 
 	/**
+	 * Applies given latest value to a project in Dependency-Track.
+	 *
+	 * @param project The project to which the latest value will be applied
+	 * @param latest the boolean value that should be applied
+	 * @return The updated project
+	 * @throws DTrackException If an error occurs during the request
+	 */
+	public Project applyLatest(Project project, boolean latest) {
+		log.info("Applying latest = " + latest + " to project " + project.getName() + ":" + project.getVersion());
+		try {
+			Project updatedProject = client.applyLatest(project, latest);
+			log.info("Successfully applied latest='"+ latest +"' to project");
+			return updatedProject;
+		} catch (HttpResponseException e) {
+			log.error("Failed to apply latest state: " + e.getMessage());
+			throw handleCommonErrors(e);
+		} catch (IOException e) {
+			log.error("Error applying latest state: " + e.getMessage());
+			throw new DTrackException("Error applying latest state: ", e);
+		}
+	}
+
+	/**
 	 * Polls a token for processing status in Dependency-Track.
 	 * <p>
 	 * This method waits for the token to be processed for the specified duration.

@@ -158,6 +158,8 @@ Uploads a CycloneDX or SPDX BOM to Dependency-Track. A project is created in Dep
 
 If both, `parentName` and `parentVersion` are specified (not empty), the appropriate parent project will be applied as a parent to the target project. If `autoCreateParent` is set to `true` and no matching parent project found in Dependency-Track, an appropriate parent project will be created first, otherwise the assigned parent project will be left as is. 
 
+When `markAsLatest` is set to `true`, the uploaded project will be marked as `latest` in Dependency-Track.
+
 Upon uploading a BOM to Dependency-Track a token is returned, which can be checked for processing status if `pollToken` is `true`.
 
 If `pollToken` is set to `false`, then this goal would upload the BOM, optionally assign the specified parent project, write the token to a file at `tokenFile` and then exit.
@@ -211,6 +213,7 @@ Configuration:
 | `parentCollectionTag`        | The collection tag that should be applied to the created parent project             | empty                                                                         |
 | `collectionLogic`            | The collection logic that should be applied to the current project                  | empty                                                                         |
 | `collectionTag`              | The collection tag that should be applied to the current project                    | empty                                                                         |
+| `markAsLatest`               | Whether or not the uploaded project shouold be marked as latest automatically       | false                                                                         |
 
 ---
 
